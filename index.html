@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joutes Sportives</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F3EE; --surface: #FFFFFF; --surface2: #EDEBE5;
+  --text: #1A1915; --text2: #6B6860; --text3: #A8A69F;
+  --accent: #D4522A; --green: #2D6A4F;
+  --border: rgba(26,25,21,0.1); --border2: rgba(26,25,21,0.06);
+  --shadow: 0 2px 16px rgba(26,25,21,0.08); --r: 12px; --r-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* LOGIN */
+#login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1rem; }
+.login-box { background:var(--surface); border-radius:20px; padding:3rem 2.5rem; box-shadow:var(--shadow); max-width:400px; width:100%; text-align:center; }
+.login-logo { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; letter-spacing:.15em; color:var(--accent); text-transform:uppercase; margin-bottom:1.5rem; }
+.login-title { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; margin-bottom:.5rem; }
+.login-sub { color:var(--text2); font-size:14px; margin-bottom:2rem; }
+.login-input { width:100%; padding:14px 16px; border:1.5px solid var(--border); border-radius:var(--r-sm); font-size:20px; text-align:center; letter-spacing:.25em; background:var(--bg); color:var(--text); font-family:'Syne',sans-serif; font-weight:700; margin-bottom:1rem; transition:border-color .2s; }
+.login-input:focus { outline:none; border-color:var(--accent); }
+.login-btn { width:100%; padding:14px; background:var(--accent); color:white; border:none; border-radius:var(--r-sm); font-family:'Syne',sans-serif; font-size:15px; font-weight:700; cursor:pointer; transition:opacity .2s; }
+.login-btn:hover { opacity:.88; }
+.login-error { color:var(--accent); font-size:13px; margin-top:.5rem; display:none; }
+
+/* APP */
+#app { display:none; min-height:100vh; }
+
+/* HEADER */
+.header { background:var(--surface); border-bottom:1px solid var(--border2); padding:0 1.5rem; display:flex; align-items:center; gap:1rem; height:60px; position:sticky; top:0; z-index:100; }
+.header-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:16px; flex:1; }
+.header-logo span { color:var(--accent); }
+.nav { display:flex; gap:4px; }
+.nav-btn { padding:7px 14px; border-radius:var(--r-sm); border:none; background:transparent; font-family:'DM Sans',sans-serif; font-size:14px; cursor:pointer; color:var(--text2); transition:all .15s; }
+.nav-btn.active { background:var(--text); color:white; font-weight:500; }
+.nav-btn:not(.active):hover { background:var(--surface2); color:var(--text); }
+.saved-label { font-size:12px; color:var(--green); display:none; align-items:center; gap:4px; }
+.saved-label.show { display:flex; }
+.saving-dot { width:8px; height:8px; border-radius:50%; background:var(--green); display:inline-block; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* MAIN */
+.main { padding:1.5rem; max-width:960px; margin:0 auto; }
+.view { display:none; }
+.view.active { display:block; }
+
+/* SECTION */
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:.75rem; }
+.section-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; }
+
+/* BUTTONS */
+.btn { padding:9px 18px; border-radius:var(--r-sm); border:1.5px solid var(--border); background:transparent; font-family:'DM Sans',sans-serif; font-size:14px; cursor:pointer; color:var(--text); transition:all .15s; font-weight:500; }
+.btn:hover { background:var(--surface2); }
+.btn-accent { background:var(--accent); color:white; border-color:var(--accent); }
+.btn-accent:hover { opacity:.88; background:var(--accent); }
+.btn-sm { padding:6px 12px; font-size:13px; }
+.btn-danger { color:#A32D2D; border-color:rgba(163,45,45,.2); }
+.btn-danger:hover { background:#FCEBEB; }
+
+/* CARDS */
+.classes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-bottom:1.5rem; }
+.class-card { background:var(--surface); border-radius:var(--r); border:1.5px solid var(--border2); padding:1rem 1.25rem; transition:all .15s; }
+.class-card:hover { border-color:var(--accent); box-shadow:var(--shadow); }
+.class-card.selected { border-color:var(--accent); background:#FDF1EC; }
+.class-card-name { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:4px; }
+.class-card-count { font-size:13px; color:var(--text2); }
+.add-card { background:transparent; border:1.5px dashed var(--border); border-radius:var(--r); padding:1rem 1.25rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--text2); font-size:14px; transition:all .15s; }
+.add-card:hover { border-color:var(--accent); color:var(--accent); background:#FDF1EC; }
+
+/* TABLE */
+.table-wrap { background:var(--surface); border-radius:var(--r); border:1px solid var(--border2); overflow:hidden; }
+
+/* EVENT PICKER */
+.event-picker { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; margin-bottom:1.25rem; }
+.event-pill { padding:10px 8px; border-radius:var(--r-sm); border:1.5px solid var(--border2); background:var(--surface); cursor:pointer; text-align:center; transition:all .15s; position:relative; }
+.event-pill:hover { border-color:var(--accent); background:#FDF1EC; }
+.event-pill.active { border-color:var(--accent); background:var(--accent); color:white; }
+.event-pill-icon { font-size:18px; line-height:1; margin-bottom:3px; }
+.event-pill-label { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
+.event-pill-sub { font-size:10px; opacity:.7; margin-top:2px; }
+.event-pill-del { position:absolute; top:3px; right:4px; font-size:11px; color:var(--text3); cursor:pointer; display:none; line-height:1; background:none; border:none; padding:2px; }
+.event-pill:hover .event-pill-del { display:block; }
+.event-pill.active .event-pill-del { color:rgba(255,255,255,.7); display:block; }
+
+/* ENTRY */
+.entry-wrap { background:var(--surface); border-radius:var(--r); border:1px solid var(--border2); overflow:hidden; }
+.entry-row { display:flex; align-items:center; gap:12px; padding:10px 14px; border-bottom:1px solid var(--border2); transition:background .1s; }
+.entry-row:last-child { border-bottom:none; }
+.entry-row:focus-within { background:#FDF5F2; }
+.entry-name { flex:1; font-size:15px; font-weight:500; min-width:80px; }
+.entry-done { color:var(--green); font-size:16px; min-width:24px; text-align:right; }
+.entry-inputs { display:flex; align-items:center; gap:6px; }
+
+/* INPUT FIELDS — large & tactile */
+.ei { padding:10px 6px; border:1.5px solid var(--border); border-radius:var(--r-sm); background:var(--bg); color:var(--text); font-size:20px; font-weight:700; text-align:center; font-family:'Syne',sans-serif; width:68px; transition:border-color .15s, box-shadow .15s; -webkit-appearance:none; }
+.ei:focus { outline:none; border-color:var(--accent); background:white; box-shadow:0 0 0 3px rgba(212,82,42,.12); }
+.ei.filled { border-color:var(--green); background:#F0FAF4; }
+.ei-sep { font-size:20px; font-weight:700; color:var(--text2); }
+.ei-label { font-size:11px; color:var(--text3); white-space:nowrap; }
+
+/* PROGRESS */
+.progress-wrap { height:4px; background:var(--border2); margin-bottom:.75rem; border-radius:2px; }
+.progress-fill { height:4px; background:var(--green); border-radius:2px; transition:width .3s; }
+.progress-text { font-size:13px; color:var(--text2); margin-bottom:.5rem; }
+.progress-text strong { color:var(--green); font-family:'Syne',sans-serif; }
+
+/* STUDENTS LIST */
+.student-row { display:flex; align-items:center; padding:8px 14px; border-bottom:1px solid var(--border2); gap:10px; }
+.student-row:last-child { border-bottom:none; }
+.add-row { padding:.75rem 1rem; display:flex; gap:8px; border-top:1px solid var(--border2); }
+.add-input { flex:1; padding:9px 12px; border:1px solid var(--border); border-radius:var(--r-sm); background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; }
+.add-input:focus { outline:none; border-color:var(--accent); background:white; }
+.del-btn { background:none; border:none; cursor:pointer; color:var(--text3); font-size:16px; padding:4px 8px; border-radius:4px; }
+.del-btn:hover { color:#A32D2D; background:#FCEBEB; }
+
+/* RANKING */
+.ranking-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; margin-bottom:1.5rem; }
+.stat-card { background:var(--surface); border-radius:var(--r-sm); padding:1rem; border:1px solid var(--border2); }
+.stat-label { font-size:11px; color:var(--text2); font-weight:500; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+.stat-value { font-family:'Syne',sans-serif; font-size:24px; font-weight:700; }
+.rank-table-wrap { background:var(--surface); border-radius:var(--r); border:1px solid var(--border2); overflow:hidden; overflow-x:auto; }
+.rank-table { width:100%; border-collapse:collapse; min-width:500px; }
+.rank-table thead th { padding:10px 10px; background:var(--bg); border-bottom:1px solid var(--border2); font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text2); white-space:nowrap; text-align:left; }
+.rank-table tbody td { padding:11px 10px; border-bottom:1px solid var(--border2); font-size:14px; vertical-align:middle; }
+.rank-table tbody tr:last-child td { border-bottom:none; }
+.rank-table tbody tr:hover { background:var(--bg); }
+.event-score { display:inline-block; min-width:26px; text-align:center; padding:2px 5px; border-radius:4px; font-size:12px; font-weight:600; }
+.pts-10 { background:#D4EDDA; color:#155724; }
+.pts-high { background:#D6EAF8; color:#1A5276; }
+.pts-mid { background:#FDEBD0; color:#784212; }
+.pts-low { background:var(--surface2); color:var(--text2); }
+.pts-none { color:var(--text3); font-size:12px; }
+.score-bar-wrap { display:flex; align-items:center; gap:8px; }
+.score-bar-bg { flex:1; height:4px; background:var(--border2); border-radius:99px; min-width:40px; }
+.score-bar-fill { height:4px; background:var(--accent); border-radius:99px; transition:width .5s; }
+
+/* MODAL */
+.modal-overlay { position:fixed; inset:0; background:rgba(26,25,21,.45); display:flex; align-items:center; justify-content:center; z-index:200; padding:1rem; }
+.modal { background:var(--surface); border-radius:16px; padding:1.75rem; width:100%; max-width:420px; box-shadow:0 20px 60px rgba(26,25,21,.2); }
+.modal h3 { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:1rem; }
+.modal-field { margin-bottom:.75rem; }
+.modal-field label { font-size:12px; color:var(--text2); font-weight:500; text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:5px; }
+.modal-field input, .modal-field select { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:var(--r-sm); font-size:15px; font-family:'DM Sans',sans-serif; color:var(--text); background:var(--bg); }
+.modal-field input:focus, .modal-field select:focus { outline:none; border-color:var(--accent); }
+.modal-btns { display:flex; gap:8px; justify-content:flex-end; margin-top:1.25rem; }
+.toggle-group { display:flex; border:1.5px solid var(--border); border-radius:var(--r-sm); overflow:hidden; }
+.toggle-btn { flex:1; padding:9px 8px; border:none; background:transparent; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; color:var(--text2); transition:all .15s; text-align:center; }
+.toggle-btn.on { background:var(--accent); color:white; }
+
+/* NOTICE */
+.notice { font-size:12px; color:var(--text3); margin-top:.75rem; line-height:1.6; }
+.notice strong { color:var(--text2); }
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .header { padding:0 1rem; }
+  .nav-btn { padding:6px 10px; font-size:13px; }
+  .main { padding:1rem; }
+  .ei { width:58px; font-size:18px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Joutes Sportives</div>
+    <div class="login-title">Bienvenue 👋</div>
+    <div class="login-sub">Entrez le code d'accès pour continuer</div>
+    <input type="password" class="login-input" id="pwd-input" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter')checkPwd()">
+    <button class="login-btn" onclick="checkPwd()">Accéder</button>
+    <div class="login-error" id="login-error">Code incorrect, réessayez.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header class="header">
+    <div class="header-logo">Joutes <span>Sportives</span></div>
+    <div class="saved-label" id="saved-label"><span class="saving-dot"></span> Sauvegardé</div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="showView('saisie',this)">Saisie</button>
+      <button class="nav-btn" onclick="showView('classement',this)">Classement</button>
+      <button class="nav-btn" onclick="showView('epreuves',this)">Épreuves</button>
+    </nav>
+  </header>
+
+  <main class="main">
+
+    <!-- ── SAISIE ── -->
+    <div id="view-saisie" class="view active">
+      <div class="section-header">
+        <div class="section-title">Classes</div>
+        <button class="btn btn-accent btn-sm" onclick="openModal('modal-class')">+ Classe</button>
+      </div>
+      <div class="classes-grid" id="classes-grid"></div>
+
+      <div id="class-detail" style="display:none">
+        <div class="section-header">
+          <div class="section-title" id="class-detail-title"></div>
+          <button class="btn btn-sm btn-danger" onclick="deleteClass()">Supprimer la classe</button>
+        </div>
+
+        <!-- Élèves -->
+        <div style="margin-bottom:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;">👥 Élèves</div>
+            <span id="student-count" style="font-size:13px;color:var(--text2)"></span>
+          </div>
+          <div class="table-wrap">
+            <div style="padding:.6rem 1rem;border-bottom:1px solid var(--border2);background:var(--bg)">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:5px">Coller une liste (un nom par ligne) puis <strong>Importer</strong></div>
+              <textarea id="bulk-input" rows="3" placeholder="Marie Dupont&#10;Jean Martin&#10;..." style="width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:'DM Sans',sans-serif;background:white;color:var(--text);resize:vertical;line-height:1.5"></textarea>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <button class="btn btn-accent btn-sm" onclick="importStudents()">↑ Importer</button>
+                <span id="import-feedback" style="font-size:13px;color:var(--green);align-self:center"></span>
+              </div>
+            </div>
+            <div id="student-list"></div>
+            <div class="add-row">
+              <input class="add-input" id="new-student-input" placeholder="Ajouter un élève..." onkeydown="if(event.key==='Enter')addStudent()">
+              <button class="btn btn-accent btn-sm" onclick="addStudent()">+ Ajouter</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Épreuves -->
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:.75rem">🏅 Choisir une épreuve à saisir</div>
+        <div class="event-picker" id="event-picker"></div>
+
+        <!-- Saisie individuelle -->
+        <div id="entry-individual" style="display:none">
+          <div class="progress-text" id="entry-progress"></div>
+          <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+          <div class="entry-wrap" id="entry-list"></div>
+        </div>
+
+        <!-- Saisie collective -->
+        <div id="entry-collective" style="display:none">
+          <div class="entry-wrap" style="padding:1rem 1.25rem">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:.5rem" id="collective-title"></div>
+            <div style="font-size:13px;color:var(--text2);margin-bottom:1rem" id="collective-sub"></div>
+            <div class="entry-inputs" id="collective-inputs"></div>
+          </div>
+        </div>
+
+        <p class="notice">Sauvegarde automatique à chaque modification.</p>
+      </div>
+    </div>
+
+    <!-- ── CLASSEMENT ── -->
+    <div id="view-classement" class="view">
+      <div class="ranking-stats" id="ranking-stats"></div>
+      <div class="section-title" style="margin-bottom:1rem">Classement général</div>
+      <div class="rank-table-wrap">
+        <table class="rank-table">
+          <thead><tr id="ranking-thead"></tr></thead>
+          <tbody id="ranking-tbody"></tbody>
+        </table>
+      </div>
+      <p class="notice" style="margin-top:1rem">Points : <strong>10</strong> (meilleure classe) → <strong>1</strong> (moins bonne). Épreuves individuelles = moyenne de la classe. Épreuves collectives = résultat unique.</p>
+    </div>
+
+    <!-- ── ÉPREUVES ── -->
+    <div id="view-epreuves" class="view">
+      <div class="section-header">
+        <div class="section-title">Gestion des épreuves</div>
+        <button class="btn btn-accent btn-sm" onclick="openModal('modal-event')">+ Nouvelle épreuve</button>
+      </div>
+      <div class="table-wrap">
+        <div id="events-list"></div>
+      </div>
+      <p class="notice" style="margin-top:.75rem">Les épreuves par défaut (800m, Longueur, Lancer, Sprint, Relais) ne peuvent pas être supprimées.</p>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL CLASSE -->
+<div id="modal-class" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-class')">
+  <div class="modal">
+    <h3>Nouvelle classe</h3>
+    <div class="modal-field">
+      <label>Nom de la classe</label>
+      <input type="text" id="new-class-input" placeholder="Ex : 7P221" onkeydown="if(event.key==='Enter')addClassConfirm()">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-sm" onclick="closeModal('modal-class')">Annuler</button>
+      <button class="btn btn-accent btn-sm" onclick="addClassConfirm()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ÉPREUVE -->
+<div id="modal-event" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-event')">
+  <div class="modal">
+    <h3>Nouvelle épreuve</h3>
+    <div class="modal-field">
+      <label>Nom de l'épreuve</label>
+      <input type="text" id="ev-name" placeholder="Ex : Saut en hauteur">
+    </div>
+    <div class="modal-field">
+      <label>Icône (emoji)</label>
+      <input type="text" id="ev-icon" placeholder="🏅" maxlength="2" style="width:80px">
+    </div>
+    <div class="modal-field">
+      <label>Format de saisie</label>
+      <select id="ev-type">
+        <option value="number">Nombre simple (ex: 8.5)</option>
+        <option value="minsec">Minutes : Secondes (ex: 3:45)</option>
+        <option value="seccent">Secondes : Centièmes (ex: 8:52)</option>
+        <option value="mcm">Mètres : Centimètres (ex: 4:35)</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Unité affichée</label>
+      <input type="text" id="ev-unit" placeholder="Ex : m, cm, s, pts...">
+    </div>
+    <div class="modal-field">
+      <label>Type d'épreuve</label>
+      <div class="toggle-group">
+        <button class="toggle-btn on" id="ev-indiv-btn" onclick="setEvType('individual')">👤 Individuelle</button>
+        <button class="toggle-btn" id="ev-collec-btn" onclick="setEvType('collective')">👥 Collective</button>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label>Meilleur résultat</label>
+      <div class="toggle-group">
+        <button class="toggle-btn on" id="ev-low-btn" onclick="setEvBetter('low')">⬇ Plus petit</button>
+        <button class="toggle-btn" id="ev-high-btn" onclick="setEvBetter('high')">⬆ Plus grand</button>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-sm" onclick="closeModal('modal-event')">Annuler</button>
+      <button class="btn btn-accent btn-sm" onclick="addEventConfirm()">Créer l'épreuve</button>
+    </div>
+  </div>
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAtb4_cX9yeB5eAJa_FzIvGi6aIS5iX_UU",
+  authDomain: "joutes-bf.firebaseapp.com",
+  databaseURL: "https://joutes-bf-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "joutes-bf",
+  storageBucket: "joutes-bf.firebasestorage.app",
+  messagingSenderId: "167345661076",
+  appId: "1:167345661076:web:6ad810d43be0d9e9cfc081"
+};
+
+const ACCESS_CODE = "JOUTES25";
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+
+// ── DEFAULT EVENTS ────────────────────────
+const DEFAULT_EVENTS = [
+  { key:'r800',   label:'800m',     icon:'🏃', type:'minsec',  unit:'min:sec', collective:false, lowerBetter:true,  locked:true },
+  { key:'long',   label:'Longueur', icon:'📏', type:'mcm',     unit:'m:cm',    collective:false, lowerBetter:false, locked:true },
+  { key:'lance',  label:'Lancer',   icon:'🏋️', type:'mcm',     unit:'m:cm',    collective:false, lowerBetter:false, locked:true },
+  { key:'sprint', label:'Sprint',   icon:'⚡', type:'seccent', unit:'sec:cent',collective:false, lowerBetter:true,  locked:true },
+  { key:'relais', label:'Relais',   icon:'🏁', type:'minsec',  unit:'min:sec', collective:true,  lowerBetter:true,  locked:true },
+];
+
+// ── STATE ─────────────────────────────────
+let dbData = { classes:{}, customEvents:[] };
+let selectedClass = null;
+let selectedEventKey = null;
+let saveTimer = null;
+let newEvType = 'individual';
+let newEvBetter = 'low';
+
+// ── HELPERS ───────────────────────────────
+function allEvents() {
+  const custom = (dbData.customEvents || []).map(e => ({...e, locked:false}));
+  return [...DEFAULT_EVENTS, ...custom];
+}
+
+function getEvent(key) { return allEvents().find(e => e.key === key); }
+
+// Value → stored as total in smallest unit (seconds or cm)
+function encodeValue(type, a, b) {
+  a = parseFloat(a); b = parseFloat(b);
+  const aOk = !isNaN(a), bOk = !isNaN(b);
+  if (!aOk && !bOk) return null;
+  if (type === 'minsec')  return (aOk?a:0)*60 + (bOk?b:0);
+  if (type === 'seccent') return (aOk?a:0) + (bOk?b:0)/100;
+  if (type === 'mcm')     return (aOk?a:0)*100 + (bOk?b:0);
+  if (type === 'number')  return aOk ? a : null;
+  return null;
+}
+
+function decodeValue(type, total) {
+  if (total === null || total === undefined) return { a:'', b:'' };
+  if (type === 'minsec')  { const m=Math.floor(total/60),s=Math.round(total%60); return {a:m,b:String(s).padStart(2,'0')}; }
+  if (type === 'seccent') { const s=Math.floor(total),c=Math.round((total-s)*100); return {a:s,b:String(c).padStart(2,'0')}; }
+  if (type === 'mcm')     { const m=Math.floor(total/100),cm=Math.round(total%100); return {a:m,b:String(cm).padStart(2,'0')}; }
+  if (type === 'number')  return {a:total,b:''};
+  return {a:'',b:''};
+}
+
+function fmtValue(type, total) {
+  if (total === null || total === undefined) return '—';
+  const d = decodeValue(type, total);
+  if (type === 'number') return String(d.a);
+  return `${d.a}:${d.b}`;
+}
+
+// ── AUTH ──────────────────────────────────
+window.checkPwd = () => {
+  const val = document.getElementById('pwd-input').value.trim().toUpperCase();
+  if (val === ACCESS_CODE) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initDB();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+  }
+};
+
+let ignoreNextSnapshot = false;
+
+// ── DB ────────────────────────────────────
+function initDB() {
+  onValue(ref(db,'joutes'), snap => {
+    if (ignoreNextSnapshot) { ignoreNextSnapshot = false; return; }
+    dbData = snap.val() || { classes:{}, customEvents:[], classOrder:[] };
+    if (!dbData.classes) dbData.classes = {};
+    if (!dbData.customEvents) dbData.customEvents = [];
+    if (!dbData.classOrder) dbData.classOrder = [];
+    renderAll();
+  });
+}
+
+function saveData() {
+  set(ref(db,'joutes'), dbData);
+  clearTimeout(saveTimer);
+  const el = document.getElementById('saved-label');
+  el.classList.add('show');
+  saveTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ── VIEWS ─────────────────────────────────
+window.showView = (v, btn) => {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  btn.classList.add('active');
+  if (v === 'classement') renderRanking();
+  if (v === 'epreuves') renderEventsList();
+};
+
+function renderAll() {
+  renderClasses();
+  if (selectedClass && dbData.classes[selectedClass]) {
+    renderClassDetail();
+  } else if (selectedClass && !dbData.classes[selectedClass]) {
+    selectedClass = null;
+    document.getElementById('class-detail').style.display = 'none';
+  }
+  if (document.getElementById('view-classement').classList.contains('active')) renderRanking();
+  if (document.getElementById('view-epreuves').classList.contains('active')) renderEventsList();
+}
+
+// ── CLASSES ───────────────────────────────
+function getClassOrder() {
+  const allClasses = Object.keys(dbData.classes||{});
+  const order = dbData.classOrder || [];
+  // Add any new classes not yet in order
+  const ordered = order.filter(c => allClasses.includes(c));
+  allClasses.forEach(c => { if (!ordered.includes(c)) ordered.push(c); });
+  return ordered;
+}
+
+function renderClasses() {
+  const grid = document.getElementById('classes-grid');
+  const classes = getClassOrder();
+  grid.innerHTML = classes.map((cls, idx) => {
+    const count = Object.keys(dbData.classes[cls]?.students||{}).length;
+    const canLeft  = idx > 0;
+    const canRight = idx < classes.length - 1;
+    return `<div class="class-card${cls===selectedClass?' selected':''}" id="card_${cls}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <button onclick="event.stopPropagation();moveClass('${cls}',-1)" style="background:none;border:none;cursor:${canLeft?'pointer':'default'};font-size:16px;color:${canLeft?'var(--accent)':'var(--border)'};padding:0 4px;line-height:1" ${canLeft?'':'disabled'}>◀</button>
+        <span style="font-size:10px;color:var(--text3);letter-spacing:.04em">ordonner</span>
+        <button onclick="event.stopPropagation();moveClass('${cls}',1)" style="background:none;border:none;cursor:${canRight?'pointer':'default'};font-size:16px;color:${canRight?'var(--accent)':'var(--border)'};padding:0 4px;line-height:1" ${canRight?'':'disabled'}>▶</button>
+      </div>
+      <div class="class-card-name" onclick="selectClass('${cls}')" style="cursor:pointer">${cls}</div>
+      <div class="class-card-count" onclick="selectClass('${cls}')" style="cursor:pointer">${count} élève${count!==1?'s':''}</div>
+    </div>`;
+  }).join('') + `<div class="add-card" onclick="openModal('modal-class')"><span style="font-size:20px">＋</span> Nouvelle classe</div>`;
+}
+
+window.moveClass = (cls, dir) => {
+  const order = getClassOrder();
+  const idx = order.indexOf(cls);
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  order.splice(idx, 1);
+  order.splice(newIdx, 0, cls);
+  dbData.classOrder = [...order];
+  ignoreNextSnapshot = true;
+  saveData();
+  renderClasses();
+};
+
+window.selectClass = cls => {
+  selectedClass = cls;
+  selectedEventKey = null;
+  document.getElementById('class-detail').style.display = 'block';
+  document.getElementById('class-detail-title').textContent = cls;
+  renderClasses();
+  renderClassDetail();
+};
+
+window.deleteClass = () => {
+  if (!selectedClass) return;
+  const count = Object.keys(dbData.classes[selectedClass]?.students||{}).length;
+  if (!confirm(`Supprimer la classe ${selectedClass}${count>0?` et ses ${count} élèves`:''}?`)) return;
+  delete dbData.classes[selectedClass];
+  saveData();
+  selectedClass = null;
+  document.getElementById('class-detail').style.display = 'none';
+};
+
+window.addClassConfirm = () => {
+  const name = document.getElementById('new-class-input').value.trim();
+  if (!name) return;
+  if (dbData.classes[name]) { alert('Cette classe existe déjà.'); return; }
+  dbData.classes[name] = { students:{} };
+  saveData();
+  closeModal('modal-class');
+  document.getElementById('new-class-input').value = '';
+  selectClass(name);
+};
+
+// ── STUDENTS ──────────────────────────────
+function renderStudentList() {
+  const students = dbData.classes[selectedClass]?.students || {};
+  const ids = Object.keys(students).sort((a,b)=>(students[a].name||'').localeCompare(students[b].name||''));
+  document.getElementById('student-count').textContent = `${ids.length} élève${ids.length!==1?'s':''}`;
+  document.getElementById('student-list').innerHTML = ids.length === 0
+    ? `<div style="padding:.75rem 1rem;color:var(--text2);font-size:14px">Aucun élève — importez une liste ci-dessus.</div>`
+    : ids.map(id=>`<div class="student-row">
+        <span style="flex:1;font-size:14px;font-weight:500">${students[id].name||''}</span>
+        <button class="del-btn" onclick="deleteStudent('${id}')">✕</button>
+      </div>`).join('');
+}
+
+window.importStudents = () => {
+  const raw = document.getElementById('bulk-input').value.trim();
+  if (!raw) return;
+  const names = raw.split('\n').map(n=>n.trim()).filter(n=>n.length>0);
+  if (!dbData.classes[selectedClass].students) dbData.classes[selectedClass].students = {};
+  const existing = Object.values(dbData.classes[selectedClass].students).map(s=>s.name?.toLowerCase());
+  let added = 0;
+  names.forEach(name => {
+    if (!existing.includes(name.toLowerCase())) {
+      const id = 'e'+Date.now()+Math.random().toString(36).slice(2,5);
+      dbData.classes[selectedClass].students[id] = { name };
+      existing.push(name.toLowerCase());
+      added++;
+    }
+  });
+  saveData();
+  document.getElementById('bulk-input').value = '';
+  const fb = document.getElementById('import-feedback');
+  fb.textContent = `${added} élève${added>1?'s':''} ajouté${added>1?'s':''}`;
+  setTimeout(()=>{ fb.textContent=''; },3000);
+  renderStudentList();
+  renderEventPicker();
+};
+
+window.addStudent = () => {
+  const inp = document.getElementById('new-student-input');
+  const name = inp.value.trim();
+  if (!name || !selectedClass) return;
+  if (!dbData.classes[selectedClass].students) dbData.classes[selectedClass].students = {};
+  const id = 'e'+Date.now();
+  dbData.classes[selectedClass].students[id] = { name };
+  saveData();
+  inp.value = ''; inp.focus();
+  renderStudentList();
+  renderEventPicker();
+  if (selectedEventKey) selectEvent(selectedEventKey);
+};
+
+window.deleteStudent = id => {
+  if (!confirm('Supprimer cet élève ?')) return;
+  delete dbData.classes[selectedClass].students[id];
+  saveData();
+  renderStudentList();
+  renderEventPicker();
+  if (selectedEventKey) selectEvent(selectedEventKey);
+};
+
+// ── CLASS DETAIL ──────────────────────────
+function renderClassDetail() {
+  renderStudentList();
+  renderEventPicker();
+  if (selectedEventKey) selectEvent(selectedEventKey);
+}
+
+// ── EVENT PICKER ──────────────────────────
+function renderEventPicker() {
+  const cls = dbData.classes[selectedClass] || {};
+  const students = Object.values(cls.students||{});
+  const picker = document.getElementById('event-picker');
+  picker.innerHTML = allEvents().map(e => {
+    let filled=0, total=1;
+    if (e.collective) {
+      filled = (cls[e.key] !== null && cls[e.key] !== undefined) ? 1 : 0;
+    } else {
+      total = students.length;
+      filled = students.filter(s => s[e.key] !== null && s[e.key] !== undefined).length;
+    }
+    const isActive = selectedEventKey === e.key;
+    const progress = total > 0 ? `${filled}/${total} · ` : '';
+    const delBtn = e.locked ? '' : `<button class="event-pill-del" onclick="deleteCustomEvent(event,'${e.key}')" title="Supprimer">✕</button>`;
+    return `<div class="event-pill${isActive?' active':''}" onclick="selectEvent('${e.key}')">
+      ${delBtn}
+      <div class="event-pill-icon">${e.icon}</div>
+      <div class="event-pill-label">${e.label}</div>
+      <div class="event-pill-sub">${progress}${e.unit}</div>
+    </div>`;
+  }).join('');
+}
+
+window.selectEvent = key => {
+  selectedEventKey = key;
+  renderEventPicker();
+  const ev = getEvent(key);
+  if (!ev) return;
+
+  if (ev.collective) {
+    document.getElementById('entry-individual').style.display = 'none';
+    document.getElementById('entry-collective').style.display = 'block';
+    renderCollectiveEntry(ev);
+  } else {
+    document.getElementById('entry-collective').style.display = 'none';
+    document.getElementById('entry-individual').style.display = 'block';
+    renderIndividualEntry(ev);
+  }
+};
+
+// ── INDIVIDUAL ENTRY ──────────────────────
+function renderIndividualEntry(ev) {
+  const cls = dbData.classes[selectedClass] || {};
+  const students = cls.students || {};
+  const ids = Object.keys(students).sort((a,b)=>(students[a].name||'').localeCompare(students[b].name||''));
+  const filled = ids.filter(id => students[id][ev.key] !== null && students[id][ev.key] !== undefined).length;
+  const total = ids.length;
+
+  document.getElementById('entry-progress').innerHTML =
+    `<strong>${filled}/${total}</strong> élèves saisis — <strong>${ev.label}</strong>`;
+  document.getElementById('progress-fill').style.width = total>0 ? Math.round(filled/total*100)+'%' : '0%';
+
+  const list = document.getElementById('entry-list');
+  if (ids.length === 0) {
+    list.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--text2);font-size:14px">Ajoutez des élèves d'abord.</div>`;
+    return;
+  }
+
+  list.innerHTML = ids.map((id, idx) => {
+    const s = students[id];
+    const val = s[ev.key];
+    const hasDone = val !== null && val !== undefined;
+    const d = decodeValue(ev.type, val);
+    let inputsHtml = buildInputs(ev, id, idx, d, hasDone);
+    return `<div class="entry-row" id="row_${id}">
+      <div class="entry-name">${s.name||''}</div>
+      ${inputsHtml}
+      <div class="entry-done" id="done_${id}">${hasDone?'✓':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildInputs(ev, id, idx, d, hasDone) {
+  const filled = hasDone ? ' filled' : '';
+  if (ev.type === 'number') {
+    return `<div class="entry-inputs">
+      <input class="ei${filled}" type="text" inputmode="decimal"
+        placeholder="—" value="${hasDone?d.a:''}"
+        id="fi_${id}_a" tabindex="${idx+1}"
+        onfocus="this.select()"
+        onchange="saveIndividual('${id}','${ev.key}','${ev.type}',this.value,'')"
+        onkeydown="navKey(event,${idx},'a','${ev.type}')">
+      <span class="ei-label">${ev.unit}</span>
+    </div>`;
+  }
+  const [labelA, labelB] = inputLabels(ev.type);
+  const maxB = (ev.type==='seccent') ? 99 : 59;
+  return `<div class="entry-inputs">
+    <input class="ei${filled}" type="text" inputmode="numeric"
+      placeholder="${labelA}" value="${hasDone&&d.a!==''?d.a:''}"
+      id="fi_${id}_a" tabindex="${idx*2+1}"
+      onfocus="this.select()"
+      onchange="saveIndividualAB('${id}','${ev.key}','${ev.type}','a',this.value)"
+      onkeydown="navKey(event,${idx},'a','${ev.type}')">
+    <span class="ei-sep">:</span>
+    <input class="ei${filled}" type="text" inputmode="numeric"
+      placeholder="${labelB}" value="${hasDone&&d.b!==''?d.b:''}"
+      id="fi_${id}_b" tabindex="${idx*2+2}"
+      onfocus="this.select()"
+      onchange="saveIndividualAB('${id}','${ev.key}','${ev.type}','b',this.value)"
+      onkeydown="navKey(event,${idx},'b','${ev.type}')">
+    <span class="ei-label">${ev.unit}</span>
+  </div>`;
+}
+
+function inputLabels(type) {
+  if (type==='minsec')  return ['min','sec'];
+  if (type==='seccent') return ['sec','c'];
+  if (type==='mcm')     return ['m','cm'];
+  return ['',''];
+}
+
+window.saveIndividual = (id, key, type, aVal, bVal) => {
+  const s = dbData.classes[selectedClass]?.students?.[id];
+  if (!s) return;
+  s[key] = encodeValue(type, aVal, bVal);
+  refreshRowDone(id, key);
+  refreshProgress(key);
+  saveData();
+};
+
+window.saveIndividualAB = (id, key, type, field, val) => {
+  const s = dbData.classes[selectedClass]?.students?.[id];
+  if (!s) return;
+  // Lire les deux champs directement depuis le DOM pour éviter tout mélange
+  const elA = document.getElementById(`fi_${id}_a`);
+  const elB = document.getElementById(`fi_${id}_b`);
+  const aVal = elA ? elA.value : '';
+  const bVal = elB ? elB.value : '';
+  s[key] = encodeValue(type, aVal, bVal);
+  refreshRowDone(id, key);
+  refreshProgress(key);
+  saveData();
+};
+
+function refreshRowDone(id, key) {
+  const s = dbData.classes[selectedClass]?.students?.[id];
+  if (!s) return;
+  const hasDone = s[key] !== null && s[key] !== undefined;
+  const doneEl = document.getElementById(`done_${id}`);
+  if (doneEl) doneEl.textContent = hasDone ? '✓' : '';
+  const row = document.getElementById(`row_${id}`);
+  if (row) row.querySelectorAll('.ei').forEach(inp => inp.classList.toggle('filled', hasDone));
+}
+
+function refreshProgress(key) {
+  const cls = dbData.classes[selectedClass] || {};
+  const students = cls.students || {};
+  const ids = Object.keys(students);
+  const total = ids.length;
+  const filled = ids.filter(id => students[id][key] !== null && students[id][key] !== undefined).length;
+  const pct = total>0 ? Math.round(filled/total*100) : 0;
+  const pb = document.getElementById('progress-fill');
+  const pr = document.getElementById('entry-progress');
+  if (pb) pb.style.width = pct+'%';
+  if (pr) pr.innerHTML = `<strong>${filled}/${total}</strong> élèves saisis — <strong>${getEvent(key)?.label||''}</strong>`;
+  renderEventPicker();
+}
+
+// Tab/Enter navigation
+window.navKey = (e, rowIdx, field, type) => {
+  // On field b (secondes/centièmes/cm), only navigate on Enter — never on Tab (let browser handle it)
+  if (field === 'b') {
+    if (e.key !== 'Enter') return;
+    const cls = dbData.classes[selectedClass]?.students || {};
+    const ids = Object.keys(cls).sort((a,b)=>(cls[a].name||'').localeCompare(cls[b].name||''));
+    const nextId = ids[rowIdx+1];
+    if (nextId) {
+      e.preventDefault();
+      const next = document.getElementById(`fi_${nextId}_a`);
+      if (next) { next.focus(); next.select(); }
+    }
+    return;
+  }
+  // On field a, Enter or Tab moves to field b
+  if (e.key !== 'Enter' && !(e.key==='Tab' && !e.shiftKey)) return;
+  if (type !== 'number') {
+    const cls = dbData.classes[selectedClass]?.students || {};
+    const ids = Object.keys(cls).sort((a,b)=>(cls[a].name||'').localeCompare(cls[b].name||''));
+    const nb = document.getElementById(`fi_${ids[rowIdx]}_b`);
+    if (nb) { e.preventDefault(); nb.focus(); nb.select(); return; }
+  }
+  const cls2 = dbData.classes[selectedClass]?.students || {};
+  const ids2 = Object.keys(cls2).sort((a,b)=>(cls2[a].name||'').localeCompare(cls2[b].name||''));
+  const nextId = ids2[rowIdx+1];
+  if (nextId) {
+    e.preventDefault();
+    const next = document.getElementById(`fi_${nextId}_a`);
+    if (next) { next.focus(); next.select(); }
+  }
+};
+
+// ── COLLECTIVE ENTRY ──────────────────────
+function renderCollectiveEntry(ev) {
+  const cls = dbData.classes[selectedClass] || {};
+  const val = cls[ev.key];
+  const hasDone = val !== null && val !== undefined;
+  const d = decodeValue(ev.type, val);
+
+  document.getElementById('collective-title').textContent = `${ev.icon} ${ev.label} — résultat collectif`;
+  document.getElementById('collective-sub').textContent = `Un seul résultat pour toute la classe`;
+
+  let inputsHtml = '';
+  if (ev.type === 'number') {
+    inputsHtml = `<input class="ei${hasDone?' filled':''}" type="text" inputmode="decimal"
+      placeholder="—" value="${hasDone?d.a:''}"
+      onfocus="this.select()"
+      onchange="saveCollective('${ev.key}','${ev.type}',this.value,'')">
+      <span class="ei-label">${ev.unit}</span>`;
+  } else {
+    const [lA, lB] = inputLabels(ev.type);
+    inputsHtml = `
+      <input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric"
+        id="coll_a" placeholder="${lA}" value="${hasDone&&d.a!==''?d.a:''}"
+        onfocus="this.select()"
+        onchange="saveCollectiveAB('${ev.key}','${ev.type}','a',this.value)">
+      <span class="ei-sep">:</span>
+      <input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric"
+        id="coll_b" placeholder="${lB}" value="${hasDone&&d.b!==''?d.b:''}"
+        onfocus="this.select()"
+        onchange="saveCollectiveAB('${ev.key}','${ev.type}','b',this.value)">
+      <span class="ei-label">${ev.unit}</span>
+      <span id="coll-total" style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDone?'= '+fmtValue(ev.type,val):''}</span>`;
+  }
+  document.getElementById('collective-inputs').innerHTML = inputsHtml;
+}
+
+window.saveCollective = (key, type, aVal, bVal) => {
+  if (!selectedClass) return;
+  dbData.classes[selectedClass][key] = encodeValue(type, aVal, bVal);
+  saveData();
+  renderEventPicker();
+};
+
+window.saveCollectiveAB = (key, type, field, val) => {
+  if (!selectedClass) return;
+  const cls = dbData.classes[selectedClass];
+  const elA = document.getElementById('coll_a');
+  const elB = document.getElementById('coll_b');
+  const aVal = elA ? elA.value : '';
+  const bVal = elB ? elB.value : '';
+  cls[key] = encodeValue(type, aVal, bVal);
+  const totalEl = document.getElementById('coll-total');
+  if (totalEl) totalEl.textContent = cls[key] !== null ? '= '+fmtValue(type, cls[key]) : '';
+  saveData();
+  renderEventPicker();
+};
+
+// ── CUSTOM EVENTS ─────────────────────────
+window.setEvType = t => {
+  newEvType = t;
+  document.getElementById('ev-indiv-btn').classList.toggle('on', t==='individual');
+  document.getElementById('ev-collec-btn').classList.toggle('on', t==='collective');
+};
+
+window.setEvBetter = t => {
+  newEvBetter = t;
+  document.getElementById('ev-low-btn').classList.toggle('on', t==='low');
+  document.getElementById('ev-high-btn').classList.toggle('on', t==='high');
+};
+
+window.addEventConfirm = () => {
+  const label = document.getElementById('ev-name').value.trim();
+  const icon  = document.getElementById('ev-icon').value.trim() || '🏅';
+  const type  = document.getElementById('ev-type').value;
+  const unit  = document.getElementById('ev-unit').value.trim() || '';
+  if (!label) { alert('Donnez un nom à l\'épreuve.'); return; }
+  const key = 'custom_' + Date.now();
+  if (!dbData.customEvents) dbData.customEvents = [];
+  dbData.customEvents.push({ key, label, icon, type, unit, collective: newEvType==='collective', lowerBetter: newEvBetter==='low' });
+  saveData();
+  closeModal('modal-event');
+  ['ev-name','ev-icon','ev-unit'].forEach(id => document.getElementById(id).value='');
+  renderEventsList();
+  if (selectedClass) renderEventPicker();
+};
+
+window.deleteCustomEvent = (e, key) => {
+  e.stopPropagation();
+  if (!confirm('Supprimer cette épreuve ? Les résultats associés seront perdus.')) return;
+  dbData.customEvents = (dbData.customEvents||[]).filter(ev => ev.key !== key);
+  // Remove results from all classes
+  Object.values(dbData.classes||{}).forEach(cls => {
+    delete cls[key];
+    Object.values(cls.students||{}).forEach(s => delete s[key]);
+  });
+  if (selectedEventKey === key) {
+    selectedEventKey = null;
+    document.getElementById('entry-individual').style.display = 'none';
+    document.getElementById('entry-collective').style.display = 'none';
+  }
+  saveData();
+  renderEventsList();
+  if (selectedClass) renderEventPicker();
+};
+
+function renderEventsList() {
+  const events = allEvents();
+  const el = document.getElementById('events-list');
+  el.innerHTML = events.map(e => `
+    <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border2);gap:12px">
+      <span style="font-size:20px;min-width:28px">${e.icon}</span>
+      <div style="flex:1">
+        <div style="font-weight:500;font-size:14px">${e.label}</div>
+        <div style="font-size:12px;color:var(--text2)">
+          ${e.collective?'Collective':'Individuelle'} · ${e.lowerBetter?'Plus petit = meilleur':'Plus grand = meilleur'} · ${e.unit}
+        </div>
+      </div>
+      ${e.locked ? '<span style="font-size:11px;color:var(--text3);border:1px solid var(--border2);border-radius:4px;padding:2px 6px">Par défaut</span>'
+        : `<button class="btn btn-sm btn-danger" onclick="deleteCustomEvent(event,'${e.key}')">Supprimer</button>`}
+    </div>`).join('');
+}
+
+// ── RANKING ───────────────────────────────
+function avg(students, key) {
+  const vals = Object.values(students).map(s=>s[key]).filter(v=>v!==null&&v!==undefined&&!isNaN(parseFloat(v))).map(parseFloat);
+  return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+}
+
+function assignPoints(classStats, eventKey, lowerBetter) {
+  const withData = classStats.filter(cs => cs.avgs[eventKey] !== null);
+  if (withData.length === 0) return;
+  const n = withData.length;
+  const sorted = [...withData].sort((a,b) => lowerBetter ? a.avgs[eventKey]-b.avgs[eventKey] : b.avgs[eventKey]-a.avgs[eventKey]);
+  // 1er = n points, 2ème = n-1 ... dernier = 1 — toujours des entiers
+  sorted.forEach((cs,i) => { cs.pts[eventKey] = n - i; });
+}
+
+function renderRanking() {
+  const events = allEvents();
+  const classes = getClassOrder();
+  const totalStudents = classes.reduce((n,c)=>n+Object.keys(dbData.classes[c]?.students||{}).length,0);
+
+  // Header
+  document.getElementById('ranking-thead').innerHTML =
+    `<th>#</th><th>Classe</th>${events.map(e=>`<th>${e.icon} ${e.label}</th>`).join('')}<th>Total</th>`;
+
+  document.getElementById('ranking-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Classes</div><div class="stat-value">${classes.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Élèves</div><div class="stat-value">${totalStudents}</div></div>
+    <div class="stat-card"><div class="stat-label">Épreuves</div><div class="stat-value">${events.length}</div></div>
+  `;
+
+  const classStats = classes.map(c => {
+    const students = dbData.classes[c]?.students || {};
+    const avgs = {};
+    events.forEach(e => {
+      if (e.collective) {
+        const rv = dbData.classes[c]?.[e.key];
+        avgs[e.key] = (rv!==null&&rv!==undefined&&!isNaN(parseFloat(rv))) ? parseFloat(rv) : null;
+      } else {
+        avgs[e.key] = avg(students, e.key);
+      }
+    });
+    return { cls:c, avgs, pts:{}, total:0 };
+  });
+
+  events.forEach(e => assignPoints(classStats, e.key, e.lowerBetter));
+  classStats.forEach(cs => { cs.total = Object.values(cs.pts).reduce((a,b)=>a+b,0); });
+  classStats.sort((a,b) => b.total-a.total);
+
+  const maxTotal = Math.max(...classStats.map(cs=>cs.total), 1);
+  const medals = ['🥇','🥈','🥉'];
+  let rank = 0;
+
+  document.getElementById('ranking-tbody').innerHTML = classStats.map(cs => {
+    const hasData = cs.total > 0;
+    if (hasData) rank++;
+    const medal = rank<=3&&hasData ? `<span style="font-size:20px">${medals[rank-1]}</span>` : `<span style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:var(--text3)">${hasData?rank:'—'}</span>`;
+    const evCells = events.map(e => {
+      const p = cs.pts[e.key];
+      if (p===undefined) return `<td><span class="pts-none">—</span></td>`;
+      const cls = p===10?'pts-10':p>=8?'pts-high':p>=5?'pts-mid':'pts-low';
+      const val = cs.avgs[e.key];
+      const disp = val!==null ? `<br><span style="font-size:11px;color:var(--text3)">${fmtValue(e.type,val)}</span>` : '';
+      return `<td><span class="event-score ${cls}">${p}</span>${disp}</td>`;
+    }).join('');
+    const barW = hasData ? Math.round(cs.total/maxTotal*100) : 0;
+    const totalCell = hasData
+      ? `<div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:${barW}%"></div></div><strong style="font-family:'Syne',sans-serif;font-size:15px;color:var(--accent)">${cs.total}</strong></div>`
+      : `<span class="pts-none">—</span>`;
+    return `<tr><td>${medal}</td><td style="font-family:'Syne',sans-serif;font-weight:700">${cs.cls}</td>${evCells}<td>${totalCell}</td></tr>`;
+  }).join('');
+}
+
+// ── MODALS ────────────────────────────────
+window.openModal = id => { document.getElementById(id).style.display='flex'; };
+window.closeModal = id => { document.getElementById(id).style.display='none'; };
+
+document.getElementById('pwd-input').addEventListener('keydown', e => { if(e.key==='Enter') window.checkPwd(); });
+</script>
+</body>
+</html>
