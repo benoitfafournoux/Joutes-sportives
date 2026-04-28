@@ -64,9 +64,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 
 /* CARDS */
 .classes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-bottom:1.5rem; }
-.class-card { background:var(--surface); border-radius:var(--r); border:1.5px solid var(--border2); padding:1rem 1.25rem; cursor:pointer; transition:all .15s; }
+.class-card { background:var(--surface); border-radius:var(--r); border:1.5px solid var(--border2); padding:1rem 1.25rem; cursor:grab; transition:all .15s; user-select:none; }
+.class-card:active { cursor:grabbing; }
 .class-card:hover { border-color:var(--accent); transform:translateY(-1px); box-shadow:var(--shadow); }
 .class-card.selected { border-color:var(--accent); background:#FDF1EC; }
+.class-card.dragging { opacity:0.4; border:2px dashed var(--accent); transform:scale(0.97); }
+.class-card.drag-over { border:2px solid var(--accent); background:#FDF1EC; transform:scale(1.03); box-shadow:var(--shadow); }
 .class-card-name { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:4px; }
 .class-card-count { font-size:13px; color:var(--text2); }
 .add-card { background:transparent; border:1.5px dashed var(--border); border-radius:var(--r); padding:1rem 1.25rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--text2); font-size:14px; transition:all .15s; }
@@ -470,17 +473,126 @@ function renderAll() {
 }
 
 // ── CLASSES ───────────────────────────────
+function getClassOrder() {
+  const allClasses = Object.keys(dbData.classes||{});
+  const order = dbData.classOrder || [];
+  // Add any new classes not yet in order
+  const ordered = order.filter(c => allClasses.includes(c));
+  allClasses.forEach(c => { if (!ordered.includes(c)) ordered.push(c); });
+  return ordered;
+}
+
 function renderClasses() {
   const grid = document.getElementById('classes-grid');
-  const classes = Object.keys(dbData.classes||{}).sort();
+  const classes = getClassOrder();
   grid.innerHTML = classes.map(cls => {
     const count = Object.keys(dbData.classes[cls]?.students||{}).length;
-    return `<div class="class-card${cls===selectedClass?' selected':''}" onclick="selectClass('${cls}')">
+    return `<div class="class-card${cls===selectedClass?' selected':''}"
+      draggable="true"
+      ondragstart="dragStart(event,'${cls}')"
+      ondragover="dragOver(event,'${cls}')"
+      ondragleave="dragLeave(event)"
+      ondrop="dragDrop(event,'${cls}')"
+      ondragend="dragEnd(event)"
+      ontouchstart="touchStart(event,'${cls}')"
+      ontouchmove="touchMove(event)"
+      ontouchend="touchEnd(event,'${cls}')"
+      onclick="selectClass('${cls}')">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:2px;letter-spacing:.05em">☰ glisser pour ordonner</div>
       <div class="class-card-name">${cls}</div>
       <div class="class-card-count">${count} élève${count!==1?'s':''}</div>
     </div>`;
   }).join('') + `<div class="add-card" onclick="openModal('modal-class')"><span style="font-size:20px">＋</span> Nouvelle classe</div>`;
 }
+
+// ── DRAG & DROP ───────────────────────────
+let dragSrc = null;
+let touchSrcCls = null;
+let touchClone = null;
+
+window.dragStart = (e, cls) => {
+  dragSrc = cls;
+  setTimeout(() => e.target.classList.add('dragging'), 0);
+  e.dataTransfer.effectAllowed = 'move';
+};
+
+window.dragOver = (e, cls) => {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (cls !== dragSrc) {
+    document.querySelectorAll('.class-card').forEach(c => c.classList.remove('drag-over'));
+    e.currentTarget.classList.add('drag-over');
+  }
+};
+
+window.dragLeave = (e) => {
+  e.currentTarget.classList.remove('drag-over');
+};
+
+window.dragDrop = (e, targetCls) => {
+  e.preventDefault();
+  if (dragSrc && dragSrc !== targetCls) {
+    const order = getClassOrder();
+    const fromIdx = order.indexOf(dragSrc);
+    const toIdx = order.indexOf(targetCls);
+    order.splice(fromIdx, 1);
+    order.splice(toIdx, 0, dragSrc);
+    dbData.classOrder = order;
+    saveData();
+    renderClasses();
+  }
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('drag-over','dragging'));
+};
+
+window.dragEnd = (e) => {
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('dragging','drag-over'));
+};
+
+// ── TOUCH DRAG (mobile) ───────────────────
+window.touchStart = (e, cls) => {
+  touchSrcCls = cls;
+  const card = e.currentTarget;
+  const rect = card.getBoundingClientRect();
+  touchClone = card.cloneNode(true);
+  touchClone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;opacity:0.85;pointer-events:none;z-index:9999;transform:scale(1.05);box-shadow:0 8px 24px rgba(0,0,0,.2);border-radius:12px;`;
+  document.body.appendChild(touchClone);
+  card.classList.add('dragging');
+};
+
+window.touchMove = (e) => {
+  if (!touchClone) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  touchClone.style.top = (t.clientY - 40) + 'px';
+  touchClone.style.left = (t.clientX - 80) + 'px';
+  // highlight card under finger
+  touchClone.style.display = 'none';
+  const el = document.elementFromPoint(t.clientX, t.clientY);
+  touchClone.style.display = '';
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('drag-over'));
+  const card = el?.closest('.class-card');
+  if (card) card.classList.add('drag-over');
+};
+
+window.touchEnd = (e) => {
+  if (touchClone) { touchClone.remove(); touchClone = null; }
+  const t = e.changedTouches[0];
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('dragging','drag-over'));
+  const el = document.elementFromPoint(t.clientX, t.clientY);
+  const targetCard = el?.closest('.class-card');
+  const targetCls = targetCard ? getClassOrder().find(c => targetCard.querySelector('.class-card-name')?.textContent === c) : null;
+  if (touchSrcCls && targetCls && touchSrcCls !== targetCls) {
+    const order = getClassOrder();
+    const fromIdx = order.indexOf(touchSrcCls);
+    const toIdx = order.indexOf(targetCls);
+    order.splice(fromIdx, 1);
+    order.splice(toIdx, 0, touchSrcCls);
+    dbData.classOrder = order;
+    saveData();
+    renderClasses();
+  }
+  touchSrcCls = null;
+};
 
 window.selectClass = cls => {
   selectedClass = cls;
@@ -896,15 +1008,16 @@ function avg(students, key) {
 
 function assignPoints(classStats, eventKey, lowerBetter) {
   const withData = classStats.filter(cs => cs.avgs[eventKey] !== null);
-  if (withData.length < 2) { withData.forEach(cs=>cs.pts[eventKey]=10); return; }
+  if (withData.length === 0) return;
   const n = withData.length;
   const sorted = [...withData].sort((a,b) => lowerBetter ? a.avgs[eventKey]-b.avgs[eventKey] : b.avgs[eventKey]-a.avgs[eventKey]);
-  sorted.forEach((cs,i) => { cs.pts[eventKey] = Math.round(10-(i/Math.max(n-1,1))*9); });
+  // 1er = n points, 2ème = n-1 ... dernier = 1 — toujours des entiers
+  sorted.forEach((cs,i) => { cs.pts[eventKey] = n - i; });
 }
 
 function renderRanking() {
   const events = allEvents();
-  const classes = Object.keys(dbData.classes||{}).sort();
+  const classes = getClassOrder();
   const totalStudents = classes.reduce((n,c)=>n+Object.keys(dbData.classes[c]?.students||{}).length,0);
 
   // Header
