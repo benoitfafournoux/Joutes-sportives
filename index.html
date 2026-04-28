@@ -657,26 +657,27 @@ function buildInputs(ev, id, idx, d, hasDone) {
   const filled = hasDone ? ' filled' : '';
   if (ev.type === 'number') {
     return `<div class="entry-inputs">
-      <input class="ei${filled}" type="number" inputmode="decimal" min="0" step="0.01"
+      <input class="ei${filled}" type="text" inputmode="decimal"
         placeholder="—" value="${hasDone?d.a:''}"
         id="fi_${id}_a" tabindex="${idx+1}"
-        oninput="saveIndividual('${id}','${ev.key}','${ev.type}',this.value,'')"
+        onchange="saveIndividual('${id}','${ev.key}','${ev.type}',this.value,'')"
         onkeydown="navKey(event,${idx},'a','${ev.type}')">
       <span class="ei-label">${ev.unit}</span>
     </div>`;
   }
   const [labelA, labelB] = inputLabels(ev.type);
+  const maxB = (ev.type==='seccent') ? 99 : 59;
   return `<div class="entry-inputs">
-    <input class="ei${filled}" type="number" inputmode="numeric" min="0" step="1"
+    <input class="ei${filled}" type="text" inputmode="numeric"
       placeholder="${labelA}" value="${hasDone&&d.a!==''?d.a:''}"
       id="fi_${id}_a" tabindex="${idx*2+1}"
-      oninput="saveIndividualAB('${id}','${ev.key}','${ev.type}','a',this.value)"
+      onchange="saveIndividualAB('${id}','${ev.key}','${ev.type}','a',this.value)"
       onkeydown="navKey(event,${idx},'a','${ev.type}')">
     <span class="ei-sep">:</span>
-    <input class="ei${filled}" type="number" inputmode="numeric" min="0" step="1"
+    <input class="ei${filled}" type="text" inputmode="numeric"
       placeholder="${labelB}" value="${hasDone&&d.b!==''?d.b:''}"
       id="fi_${id}_b" tabindex="${idx*2+2}"
-      oninput="saveIndividualAB('${id}','${ev.key}','${ev.type}','b',this.value)"
+      onchange="saveIndividualAB('${id}','${ev.key}','${ev.type}','b',this.value)"
       onkeydown="navKey(event,${idx},'b','${ev.type}')">
     <span class="ei-label">${ev.unit}</span>
   </div>`;
@@ -701,11 +702,11 @@ window.saveIndividual = (id, key, type, aVal, bVal) => {
 window.saveIndividualAB = (id, key, type, field, val) => {
   const s = dbData.classes[selectedClass]?.students?.[id];
   if (!s) return;
-  const tempA = `_${key}_a`, tempB = `_${key}_b`;
-  if (field==='a') s[tempA] = val;
-  if (field==='b') s[tempB] = val;
-  const aVal = s[tempA] !== undefined ? s[tempA] : '';
-  const bVal = s[tempB] !== undefined ? s[tempB] : '';
+  // Lire les deux champs directement depuis le DOM pour éviter tout mélange
+  const elA = document.getElementById(`fi_${id}_a`);
+  const elB = document.getElementById(`fi_${id}_b`);
+  const aVal = elA ? elA.value : '';
+  const bVal = elB ? elB.value : '';
   s[key] = encodeValue(type, aVal, bVal);
   refreshRowDone(id, key);
   refreshProgress(key);
@@ -738,15 +739,30 @@ function refreshProgress(key) {
 
 // Tab/Enter navigation
 window.navKey = (e, rowIdx, field, type) => {
-  if (e.key !== 'Enter' && !(e.key==='Tab' && !e.shiftKey)) return;
-  const isTwoField = type !== 'number';
-  const cls = dbData.classes[selectedClass]?.students || {};
-  const ids = Object.keys(cls).sort((a,b)=>(cls[a].name||'').localeCompare(cls[b].name||''));
-  if (isTwoField && field==='a') {
-    const nb = document.getElementById(`fi_${ids[rowIdx]}_b`);
-    if (nb) { e.preventDefault(); nb.focus(); return; }
+  // On field b (secondes/centièmes/cm), only navigate on Enter — never on Tab (let browser handle it)
+  if (field === 'b') {
+    if (e.key !== 'Enter') return;
+    const cls = dbData.classes[selectedClass]?.students || {};
+    const ids = Object.keys(cls).sort((a,b)=>(cls[a].name||'').localeCompare(cls[b].name||''));
+    const nextId = ids[rowIdx+1];
+    if (nextId) {
+      e.preventDefault();
+      const next = document.getElementById(`fi_${nextId}_a`);
+      if (next) { next.focus(); next.select(); }
+    }
+    return;
   }
-  const nextId = ids[rowIdx+1];
+  // On field a, Enter or Tab moves to field b
+  if (e.key !== 'Enter' && !(e.key==='Tab' && !e.shiftKey)) return;
+  if (type !== 'number') {
+    const cls = dbData.classes[selectedClass]?.students || {};
+    const ids = Object.keys(cls).sort((a,b)=>(cls[a].name||'').localeCompare(cls[b].name||''));
+    const nb = document.getElementById(`fi_${ids[rowIdx]}_b`);
+    if (nb) { e.preventDefault(); nb.focus(); nb.select(); return; }
+  }
+  const cls2 = dbData.classes[selectedClass]?.students || {};
+  const ids2 = Object.keys(cls2).sort((a,b)=>(cls2[a].name||'').localeCompare(cls2[b].name||''));
+  const nextId = ids2[rowIdx+1];
   if (nextId) {
     e.preventDefault();
     const next = document.getElementById(`fi_${nextId}_a`);
@@ -766,20 +782,20 @@ function renderCollectiveEntry(ev) {
 
   let inputsHtml = '';
   if (ev.type === 'number') {
-    inputsHtml = `<input class="ei${hasDone?' filled':''}" type="number" inputmode="decimal" min="0" step="0.01"
+    inputsHtml = `<input class="ei${hasDone?' filled':''}" type="text" inputmode="decimal"
       placeholder="—" value="${hasDone?d.a:''}"
-      oninput="saveCollective('${ev.key}','${ev.type}',this.value,'')">
+      onchange="saveCollective('${ev.key}','${ev.type}',this.value,'')">
       <span class="ei-label">${ev.unit}</span>`;
   } else {
     const [lA, lB] = inputLabels(ev.type);
     inputsHtml = `
-      <input class="ei${hasDone?' filled':''}" type="number" inputmode="numeric" min="0" step="1"
+      <input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric"
         id="coll_a" placeholder="${lA}" value="${hasDone&&d.a!==''?d.a:''}"
-        oninput="saveCollectiveAB('${ev.key}','${ev.type}','a',this.value)">
+        onchange="saveCollectiveAB('${ev.key}','${ev.type}','a',this.value)">
       <span class="ei-sep">:</span>
-      <input class="ei${hasDone?' filled':''}" type="number" inputmode="numeric" min="0" step="1"
+      <input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric"
         id="coll_b" placeholder="${lB}" value="${hasDone&&d.b!==''?d.b:''}"
-        oninput="saveCollectiveAB('${ev.key}','${ev.type}','b',this.value)">
+        onchange="saveCollectiveAB('${ev.key}','${ev.type}','b',this.value)">
       <span class="ei-label">${ev.unit}</span>
       <span id="coll-total" style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDone?'= '+fmtValue(ev.type,val):''}</span>`;
   }
@@ -796,11 +812,10 @@ window.saveCollective = (key, type, aVal, bVal) => {
 window.saveCollectiveAB = (key, type, field, val) => {
   if (!selectedClass) return;
   const cls = dbData.classes[selectedClass];
-  const tempA = `_coll_${key}_a`, tempB = `_coll_${key}_b`;
-  if (field==='a') cls[tempA] = val;
-  if (field==='b') cls[tempB] = val;
-  const aVal = cls[tempA] !== undefined ? cls[tempA] : '';
-  const bVal = cls[tempB] !== undefined ? cls[tempB] : '';
+  const elA = document.getElementById('coll_a');
+  const elB = document.getElementById('coll_b');
+  const aVal = elA ? elA.value : '';
+  const bVal = elB ? elB.value : '';
   cls[key] = encodeValue(type, aVal, bVal);
   const totalEl = document.getElementById('coll-total');
   if (totalEl) totalEl.textContent = cls[key] !== null ? '= '+fmtValue(type, cls[key]) : '';
