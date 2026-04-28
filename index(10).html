@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joutes Sportives</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F3EE;
+  --surface: #FFFFFF;
+  --surface2: #EDEBE5;
+  --text: #1A1915;
+  --text2: #6B6860;
+  --text3: #A8A69F;
+  --accent: #D4522A;
+  --accent2: #F4A261;
+  --green: #2D6A4F;
+  --border: rgba(26,25,21,0.1);
+  --border2: rgba(26,25,21,0.06);
+  --shadow: 0 2px 16px rgba(26,25,21,0.08);
+  --r: 12px;
+  --r-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* LOGIN */
+#login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem;
+  background: var(--bg);
+}
+.login-box {
+  background: var(--surface); border-radius: 20px; padding: 3rem 2.5rem;
+  box-shadow: var(--shadow); max-width: 400px; width: 100%; text-align: center;
+}
+.login-logo { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase; margin-bottom: 1.5rem; }
+.login-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 0.5rem; line-height: 1.2; }
+.login-sub { color: var(--text2); font-size: 14px; margin-bottom: 2rem; }
+.login-input {
+  width: 100%; padding: 14px 16px; border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); font-size: 18px; text-align: center; letter-spacing: 0.2em;
+  background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; font-weight: 700;
+  transition: border-color 0.2s; margin-bottom: 1rem;
+}
+.login-input:focus { outline: none; border-color: var(--accent); }
+.login-btn {
+  width: 100%; padding: 14px; background: var(--accent); color: white;
+  border: none; border-radius: var(--r-sm); font-family: 'Syne', sans-serif;
+  font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.05em;
+  transition: opacity 0.2s;
+}
+.login-btn:hover { opacity: 0.88; }
+.login-error { color: var(--accent); font-size: 13px; margin-top: 0.5rem; display: none; }
+
+/* APP */
+#app { display: none; min-height: 100vh; }
+
+/* HEADER */
+.header {
+  background: var(--surface); border-bottom: 1px solid var(--border2);
+  padding: 0 1.5rem; display: flex; align-items: center; gap: 1rem;
+  height: 60px; position: sticky; top: 0; z-index: 100;
+}
+.header-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; letter-spacing: -0.02em; flex: 1; }
+.header-logo span { color: var(--accent); }
+.nav { display: flex; gap: 4px; }
+.nav-btn {
+  padding: 7px 14px; border-radius: var(--r-sm); border: none; background: transparent;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; color: var(--text2);
+  transition: all 0.15s;
+}
+.nav-btn.active { background: var(--text); color: white; font-weight: 500; }
+.nav-btn:not(.active):hover { background: var(--surface2); color: var(--text); }
+
+/* MAIN */
+.main { padding: 1.5rem; max-width: 900px; margin: 0 auto; }
+
+/* SECTION TITLES */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem; }
+.section-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
+
+/* BUTTONS */
+.btn {
+  padding: 9px 18px; border-radius: var(--r-sm); border: 1.5px solid var(--border);
+  background: transparent; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer;
+  color: var(--text); transition: all 0.15s; font-weight: 500;
+}
+.btn:hover { background: var(--surface2); }
+.btn-accent { background: var(--accent); color: white; border-color: var(--accent); }
+.btn-accent:hover { opacity: 0.88; background: var(--accent); }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+.btn-danger { color: #A32D2D; border-color: rgba(163,45,45,0.2); }
+.btn-danger:hover { background: #FCEBEB; }
+
+/* CLASSES GRID */
+.classes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.class-card {
+  background: var(--surface); border-radius: var(--r); border: 1.5px solid var(--border2);
+  padding: 1rem 1.25rem; cursor: pointer; transition: all 0.15s;
+}
+.class-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow); }
+.class-card.selected { border-color: var(--accent); background: #FDF1EC; }
+.class-card-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+.class-card-count { font-size: 13px; color: var(--text2); }
+.add-class-card {
+  background: transparent; border: 1.5px dashed var(--border);
+  border-radius: var(--r); padding: 1rem 1.25rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  color: var(--text2); font-size: 14px; transition: all 0.15s;
+}
+.add-class-card:hover { border-color: var(--accent); color: var(--accent); background: #FDF1EC; }
+
+/* STUDENT TABLE — desktop fallback */
+.table-wrap { background: var(--surface); border-radius: var(--r); border: 1px solid var(--border2); overflow: hidden; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead th {
+  padding: 10px 12px; text-align: left; font-family: 'Syne', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text2); background: var(--bg); border-bottom: 1px solid var(--border2);
+  white-space: nowrap;
+}
+tbody td { padding: 8px 12px; border-bottom: 1px solid var(--border2); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--bg); }
+.student-name { font-weight: 500; }
+.perf-input {
+  width: 80px; padding: 6px 8px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--bg); color: var(--text);
+  font-size: 14px; text-align: center; font-family: 'DM Sans', sans-serif;
+  transition: border-color 0.15s;
+}
+.perf-input:focus { outline: none; border-color: var(--accent); background: white; }
+.del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; padding: 4px 8px; border-radius: 4px; line-height: 1; }
+.del-btn:hover { color: #A32D2D; background: #FCEBEB; }
+.add-student-row { padding: 0.75rem 1rem; display: flex; gap: 8px; border-top: 1px solid var(--border2); }
+.add-student-input {
+  flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
+}
+.add-student-input:focus { outline: none; border-color: var(--accent); background: white; }
+
+/* EVENT PICKER */
+.event-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 8px; margin-bottom: 1.25rem; }
+.event-pill {
+  padding: 10px 12px; border-radius: var(--r-sm); border: 1.5px solid var(--border2);
+  background: var(--surface); cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.event-pill:hover { border-color: var(--accent); background: #FDF1EC; }
+.event-pill.active { border-color: var(--accent); background: var(--accent); color: white; }
+.event-pill-icon { font-size: 20px; line-height: 1; margin-bottom: 4px; }
+.event-pill-label { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; }
+.event-pill-unit { font-size: 11px; opacity: 0.7; }
+
+/* FAST ENTRY LIST */
+.fast-list { display: flex; flex-direction: column; gap: 0; background: var(--surface); border-radius: var(--r); border: 1px solid var(--border2); overflow: hidden; }
+.fast-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+  border-bottom: 1px solid var(--border2); transition: background 0.1s;
+}
+.fast-row:last-child { border-bottom: none; }
+.fast-row:focus-within { background: #FDF5F2; }
+.fast-row-name { flex: 1; font-size: 15px; font-weight: 500; min-width: 80px; }
+.fast-row-done { color: var(--green); font-size: 13px; min-width: 40px; text-align: right; }
+.fast-input-wrap { display: flex; align-items: center; gap: 6px; }
+.fast-input {
+  padding: 10px 8px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: var(--bg); color: var(--text); font-size: 18px; font-weight: 600;
+  text-align: center; font-family: 'Syne', sans-serif; width: 64px;
+  -webkit-appearance: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.fast-input:focus {
+  outline: none; border-color: var(--accent);
+  background: white; box-shadow: 0 0 0 3px rgba(212,82,42,0.12);
+}
+.fast-input.filled { border-color: var(--green); background: #F0FAF4; }
+.fast-sep { font-size: 18px; font-weight: 700; color: var(--text2); line-height: 1; }
+.fast-unit { font-size: 12px; color: var(--text3); white-space: nowrap; }
+.progress-bar-wrap { height: 4px; background: var(--border2); border-radius: 0; }
+.progress-bar-fill { height: 4px; background: var(--green); border-radius: 0; transition: width 0.3s ease; }
+.entry-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
+.entry-progress { font-size: 13px; color: var(--text2); }
+.entry-progress strong { color: var(--green); font-family: 'Syne', sans-serif; }
+
+/* RANKING */
+.ranking-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+.stat-card { background: var(--surface); border-radius: var(--r-sm); padding: 1rem; border: 1px solid var(--border2); }
+.stat-label { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.stat-value { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; }
+
+.rank-table-wrap { background: var(--surface); border-radius: var(--r); border: 1px solid var(--border2); overflow: hidden; }
+.rank-table { width: 100%; border-collapse: collapse; }
+.rank-table thead th {
+  padding: 10px 12px; background: var(--bg); border-bottom: 1px solid var(--border2);
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); white-space: nowrap;
+}
+.rank-table tbody td { padding: 12px 12px; border-bottom: 1px solid var(--border2); font-size: 14px; vertical-align: middle; }
+.rank-table tbody tr:last-child td { border-bottom: none; }
+.rank-table tbody tr:hover { background: var(--bg); }
+
+.rank-medal { font-size: 20px; line-height: 1; }
+.rank-pos { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; color: var(--text3); }
+.rank-class { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; }
+.score-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #F4EDE8; color: var(--accent); border-radius: 99px;
+  padding: 4px 12px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px;
+}
+.score-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.score-bar-bg { flex: 1; height: 4px; background: var(--border2); border-radius: 99px; min-width: 60px; }
+.score-bar-fill { height: 4px; background: var(--accent); border-radius: 99px; transition: width 0.5s ease; }
+
+.event-score { display: inline-block; min-width: 28px; text-align: center; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.pts-10 { background: #D4EDDA; color: #155724; }
+.pts-9  { background: #D6EAF8; color: #1A5276; }
+.pts-8  { background: #E8DAEF; color: #6C3483; }
+.pts-7  { background: #FDEBD0; color: #784212; }
+.pts-6  { background: #E8F8F5; color: #0E6655; }
+.pts-low { background: var(--surface2); color: var(--text2); }
+.pts-none { color: var(--text3); font-size: 12px; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(26,25,21,0.4);
+  display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1rem;
+}
+.modal {
+  background: var(--surface); border-radius: 16px; padding: 2rem; width: 100%; max-width: 380px;
+  box-shadow: 0 20px 60px rgba(26,25,21,0.2);
+}
+.modal h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 1rem; }
+.modal input {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  font-size: 15px; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--bg);
+  margin-bottom: 1rem;
+}
+.modal input:focus { outline: none; border-color: var(--accent); }
+.modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* NOTICE */
+.notice { font-size: 12px; color: var(--text3); margin-top: 1rem; line-height: 1.6; }
+.notice strong { color: var(--text2); }
+
+/* EMPTY */
+.empty { text-align: center; padding: 3rem 1rem; color: var(--text2); }
+.empty-icon { font-size: 40px; margin-bottom: 1rem; }
+.empty-text { font-size: 15px; }
+
+/* LOADING */
+.loading { text-align: center; padding: 2rem; color: var(--text2); font-size: 14px; }
+
+/* TABS */
+.view { display: none; }
+.view.active { display: block; }
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .header { padding: 0 1rem; }
+  .nav-btn { padding: 6px 10px; font-size: 13px; }
+  .main { padding: 1rem; }
+  .perf-input { width: 65px; }
+  .rank-table thead th, .rank-table tbody td { padding: 8px 8px; }
+}
+
+.saving-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #2D6A4F;
+  display: inline-block; margin-left: 6px; animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.saved-label { font-size: 12px; color: #2D6A4F; display: none; align-items: center; gap: 4px; }
+.saved-label.show { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Joutes Sportives</div>
+    <div class="login-title">Bienvenue 👋</div>
+    <div class="login-sub">Entrez le code d'accès pour continuer</div>
+    <input type="password" class="login-input" id="pwd-input" placeholder="••••" maxlength="8"
+      onkeydown="if(event.key==='Enter')checkPwd()">
+    <button class="login-btn" onclick="checkPwd()">Accéder</button>
+    <div class="login-error" id="login-error">Code incorrect, réessayez.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header class="header">
+    <div class="header-logo">Joutes <span>Sportives</span></div>
+    <div class="saved-label" id="saved-label">
+      <span class="saving-dot"></span> Sauvegardé
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="showView('saisie',this)">Saisie</button>
+      <button class="nav-btn" onclick="showView('classement',this)">Classement</button>
+    </nav>
+  </header>
+
+  <main class="main">
+
+    <!-- SAISIE -->
+    <div id="view-saisie" class="view active">
+      <div class="section-header">
+        <div class="section-title">Classes</div>
+        <button class="btn btn-accent btn-sm" onclick="openAddClass()">+ Ajouter une classe</button>
+      </div>
+      <div class="classes-grid" id="classes-grid"></div>
+
+      <div id="class-detail" style="display:none">
+        <div class="section-header">
+          <div class="section-title" id="class-detail-title"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="openAddStudentModal()">+ Élève</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteClass()">Supprimer</button>
+          </div>
+        </div>
+
+        <!-- CHOIX DE L'ÉPREUVE -->
+        <div class="event-picker" id="event-picker"></div>
+
+        <!-- SAISIE RAPIDE -->
+        <div id="fast-entry-panel" style="display:none">
+          <div class="entry-header">
+            <div class="entry-progress" id="entry-progress"></div>
+          </div>
+          <div class="progress-bar-wrap" style="margin-bottom:0.75rem;border-radius:var(--r-sm)">
+            <div class="progress-bar-fill" id="entry-progress-bar" style="width:0%"></div>
+          </div>
+          <div class="fast-list" id="fast-list"></div>
+        </div>
+
+        <!-- RELAIS -->
+        <div id="relay-panel" style="display:none">
+          <div class="table-wrap" style="margin-top:0">
+            <div style="padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem;">
+              <div>
+                <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;">🏁 Relais 8×50m — temps collectif</div>
+                <div style="font-size:13px;color:var(--text2);margin-top:2px;">Temps unique pour toute la classe</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input class="fast-input" type="number" min="0" max="59" step="1" id="relay-min"
+                  placeholder="m" inputmode="numeric" oninput="updateRelayFromFields()">
+                <span class="fast-sep">:</span>
+                <input class="fast-input" type="number" min="0" max="59" step="1" id="relay-sec"
+                  placeholder="ss" inputmode="numeric" oninput="updateRelayFromFields()">
+                <span class="fast-unit">min : sec</span>
+                <span id="relay-total" style="font-size:12px;color:var(--green);font-weight:600;margin-left:4px;white-space:nowrap"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GESTION ÉLÈVES -->
+        <div id="student-setup" style="margin-bottom:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;">👥 Élèves de la classe</div>
+            <span id="student-count-badge" style="font-size:13px;color:var(--text2)"></span>
+          </div>
+          <div class="table-wrap">
+            <!-- Saisie en masse -->
+            <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--border2);background:var(--bg)">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Coller une liste ou taper un prénom par ligne, puis cliquer <strong>Importer</strong></div>
+              <textarea id="bulk-input" rows="4" placeholder="Marie Dupont&#10;Jean Martin&#10;Sophie Bernard&#10;..."
+                style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-family:'DM Sans',sans-serif;background:white;color:var(--text);resize:vertical;line-height:1.6"></textarea>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button class="btn btn-accent btn-sm" onclick="importStudents()">↑ Importer</button>
+                <span id="import-feedback" style="font-size:13px;color:var(--green);align-self:center"></span>
+              </div>
+            </div>
+            <!-- Liste actuelle -->
+            <div id="student-manage-list"></div>
+            <!-- Ajout individuel -->
+            <div class="add-student-row">
+              <input class="add-student-input" id="new-student-input" placeholder="Ajouter un élève..." onkeydown="if(event.key==='Enter')addStudent()">
+              <button class="btn btn-accent btn-sm" onclick="addStudent()">+ Ajouter</button>
+            </div>
+          </div>
+        </div>
+
+        <p class="notice" style="margin-top:0.75rem">Sauvegarde automatique. <strong>800m, Sprint, Relais</strong> : moins = meilleur. <strong>Longueur, Lancer</strong> : plus = meilleur.</p>
+      </div>
+    </div>
+
+    <!-- CLASSEMENT -->
+    <div id="view-classement" class="view">
+      <div class="ranking-stats" id="ranking-stats"></div>
+      <div class="section-title" style="margin-bottom:1rem">Classement général</div>
+      <div class="rank-table-wrap">
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Classe</th>
+              <th>800m</th>
+              <th>Longueur</th>
+              <th>Lancer</th>
+              <th>Sprint</th>
+              <th>Relais 8×50m</th>
+              <th>Total pts</th>
+            </tr>
+          </thead>
+          <tbody id="ranking-tbody"></tbody>
+        </table>
+      </div>
+      <p class="notice" style="margin-top:1rem">Points par épreuve : <strong>10</strong> (meilleure classe) → <strong>1</strong> (moins bonne). Les 4 épreuves individuelles sont basées sur la moyenne de la classe. Le <strong>Relais 8×50m</strong> est le temps collectif unique de chaque classe.</p>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL AJOUT CLASSE -->
+<div id="modal-class" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3>Nouvelle classe</h3>
+    <input type="text" id="new-class-input" placeholder="Ex : 7P221" onkeydown="if(event.key==='Enter')addClassConfirm()">
+    <div class="modal-btns">
+      <button class="btn btn-sm" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-accent btn-sm" onclick="addClassConfirm()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, push, remove, update }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ═══════════════════════════════════════════
+// ▶ CONFIGURATION FIREBASE — À REMPLACER
+// ═══════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAtb4_cX9yeB5eAJa_FzIvGi6aIS5iX_UU",
+  authDomain: "joutes-bf.firebaseapp.com",
+  databaseURL: "https://joutes-bf-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "joutes-bf",
+  storageBucket: "joutes-bf.firebasestorage.app",
+  messagingSenderId: "167345661076",
+  appId: "1:167345661076:web:6ad810d43be0d9e9cfc081"
+};
+// ═══════════════════════════════════════════
+
+const ACCESS_CODE = "JOUTES25"; // ← Changez ce code d'accès !
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let dbData = { classes: {} };
+let selectedClass = null;
+let saveTimer = null;
+
+// ── AUTH ──────────────────────────────────
+window.checkPwd = () => {
+  const val = document.getElementById('pwd-input').value.trim().toUpperCase();
+  if (val === ACCESS_CODE) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initDB();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+  }
+};
+
+// ── DB LISTENER ──────────────────────────
+function initDB() {
+  const dataRef = ref(db, 'joutes');
+  onValue(dataRef, (snap) => {
+    dbData = snap.val() || { classes: {} };
+    if (!dbData.classes) dbData.classes = {};
+    renderAll();
+  });
+}
+
+function saveData() {
+  set(ref(db, 'joutes'), dbData);
+  showSaved();
+}
+
+function showSaved() {
+  clearTimeout(saveTimer);
+  const el = document.getElementById('saved-label');
+  el.classList.add('show');
+  saveTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ── VIEWS ─────────────────────────────────
+window.showView = (v, btn) => {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  btn.classList.add('active');
+  if (v === 'classement') renderRanking();
+};
+
+function renderAll() {
+  renderClasses();
+  if (selectedClass && dbData.classes[selectedClass]) {
+    renderStudents();
+  } else if (selectedClass && !dbData.classes[selectedClass]) {
+    selectedClass = null;
+    document.getElementById('class-detail').style.display = 'none';
+  }
+  if (document.getElementById('view-classement').classList.contains('active')) {
+    renderRanking();
+  }
+}
+
+// ── CLASSES ───────────────────────────────
+function renderClasses() {
+  const grid = document.getElementById('classes-grid');
+  const classes = Object.keys(dbData.classes || {});
+  let html = '';
+  classes.sort().forEach(cls => {
+    const students = Object.values(dbData.classes[cls]?.students || {});
+    const count = students.length;
+    const isSelected = cls === selectedClass;
+    html += `<div class="class-card${isSelected ? ' selected' : ''}" onclick="selectClass('${cls}')">
+      <div class="class-card-name">${cls}</div>
+      <div class="class-card-count">${count} élève${count !== 1 ? 's' : ''}</div>
+    </div>`;
+  });
+  html += `<div class="add-class-card" onclick="openAddClass()">
+    <span style="font-size:20px;line-height:1">＋</span> Nouvelle classe
+  </div>`;
+  grid.innerHTML = html;
+}
+
+window.selectClass = (cls) => {
+  selectedClass = cls;
+  document.getElementById('class-detail').style.display = 'block';
+  document.getElementById('class-detail-title').textContent = cls;
+  renderClasses();
+  renderStudents();
+};
+
+window.openAddClass = () => {
+  document.getElementById('modal-class').style.display = 'flex';
+  setTimeout(() => document.getElementById('new-class-input').focus(), 50);
+};
+
+window.closeModal = () => {
+  document.getElementById('modal-class').style.display = 'none';
+  document.getElementById('new-class-input').value = '';
+};
+
+window.addClassConfirm = () => {
+  const name = document.getElementById('new-class-input').value.trim();
+  if (!name) return;
+  if (!dbData.classes) dbData.classes = {};
+  if (dbData.classes[name]) { alert('Cette classe existe déjà.'); return; }
+  dbData.classes[name] = {};
+  saveData();
+  closeModal();
+  selectClass(name);
+};
+
+window.deleteClass = () => {
+  if (!selectedClass) return;
+  const count = Object.keys(dbData.classes[selectedClass]?.students || {}).length;
+  if (!confirm(`Supprimer la classe ${selectedClass}${count > 0 ? ` et ses ${count} élèves` : ''} ?`)) return;
+  delete dbData.classes[selectedClass];
+  saveData();
+  selectedClass = null;
+  document.getElementById('class-detail').style.display = 'none';
+};
+
+// ── TIME HELPERS ──────────────────────────
+function secToMinSec(totalSec) {
+  if (totalSec === null || totalSec === undefined) return { min: '', sec: '' };
+  const m = Math.floor(totalSec / 60);
+  const s = Math.round(totalSec % 60);
+  return { min: m, sec: String(s).padStart(2, '0') };
+}
+function secToCent(totalSec) {
+  if (totalSec === null || totalSec === undefined) return { sec: '', cent: '' };
+  const s = Math.floor(totalSec);
+  const c = Math.round((totalSec - s) * 100);
+  return { sec: s, cent: String(c).padStart(2, '0') };
+}
+function fmtTime(val, key) {
+  if (val === null || val === undefined) return '—';
+  if (key === 'r800' || key === 'relais') {
+    const m = Math.floor(val/60), s = Math.round(val%60);
+    return `${m}:${String(s).padStart(2,'0')}`;
+  }
+  if (key === 'sprint') {
+    const s = Math.floor(val), c = Math.round((val-s)*100);
+    return `${s}:${String(c).padStart(2,'0')}`;
+  }
+  return val % 1 === 0 ? String(val) : val.toFixed(1);
+}
+
+// ── EVENT PICKER ──────────────────────────
+const EVENT_META = [
+  { key: 'r800',   label: '800m',       icon: '🏃', unit: 'min:sec',  lowerBetter: true,  type: 'minsec' },
+  { key: 'long',   label: 'Longueur',   icon: '📏', unit: 'cm',       lowerBetter: false, type: 'number' },
+  { key: 'lance',  label: 'Lancer',     icon: '🏋️', unit: 'm',        lowerBetter: false, type: 'number' },
+  { key: 'sprint', label: 'Sprint',     icon: '⚡', unit: 'sec:cent', lowerBetter: true,  type: 'seccent' },
+  { key: 'relais', label: 'Relais',     icon: '🏁', unit: 'min:sec',  lowerBetter: true,  type: 'relay' },
+];
+// EVENTS for ranking (individual ones only)
+const EVENTS = EVENT_META.filter(e => e.key !== 'relais');
+const RELAY  = EVENT_META.find(e => e.key === 'relais');
+
+let selectedEvent = null;
+let studentListOpen = false;
+
+function renderEventPicker() {
+  const cls = dbData.classes[selectedClass] || {};
+  const students = Object.values(cls.students || {});
+  const picker = document.getElementById('event-picker');
+  picker.innerHTML = EVENT_META.map(e => {
+    let filled = 0;
+    if (e.key === 'relais') {
+      filled = (cls.relais !== null && cls.relais !== undefined) ? 1 : 0;
+    } else {
+      filled = students.filter(s => s[e.key] !== null && s[e.key] !== undefined).length;
+    }
+    const total = e.key === 'relais' ? 1 : students.length;
+    const isActive = selectedEvent === e.key;
+    const doneLabel = total > 0 ? `${filled}/${total}` : '';
+    return `<div class="event-pill${isActive ? ' active' : ''}" onclick="selectEvent('${e.key}')">
+      <div class="event-pill-icon">${e.icon}</div>
+      <div class="event-pill-label">${e.label}</div>
+      <div class="event-pill-unit">${doneLabel ? doneLabel + ' · ' : ''}${e.unit}</div>
+    </div>`;
+  }).join('');
+}
+
+window.selectEvent = (key) => {
+  selectedEvent = key;
+  renderEventPicker();
+  if (key === 'relais') {
+    document.getElementById('fast-entry-panel').style.display = 'none';
+    document.getElementById('relay-panel').style.display = 'block';
+    renderRelayFields();
+  } else {
+    document.getElementById('relay-panel').style.display = 'none';
+    document.getElementById('fast-entry-panel').style.display = 'block';
+    renderFastList();
+  }
+};
+
+function renderFastList() {
+  const meta = EVENT_META.find(e => e.key === selectedEvent);
+  if (!meta) return;
+  const cls = dbData.classes[selectedClass] || {};
+  const students = cls.students || {};
+  const ids = Object.keys(students).sort((a,b) => (students[a].name||'').localeCompare(students[b].name||''));
+  const total = ids.length;
+  const filled = ids.filter(id => students[id][selectedEvent] !== null && students[id][selectedEvent] !== undefined).length;
+
+  document.getElementById('entry-progress').innerHTML =
+    `<strong>${filled}/${total}</strong> élèves saisis pour <strong>${meta.label}</strong>`;
+  const pct = total > 0 ? Math.round((filled/total)*100) : 0;
+  document.getElementById('entry-progress-bar').style.width = pct + '%';
+
+  const list = document.getElementById('fast-list');
+  if (ids.length === 0) {
+    list.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--text2);font-size:14px">Ajoutez des élèves d'abord.</div>`;
+    return;
+  }
+
+  list.innerHTML = ids.map((id, idx) => {
+    const s = students[id];
+    const val = s[selectedEvent];
+    const hasDone = val !== null && val !== undefined;
+    let inputHtml = '';
+
+    if (meta.type === 'minsec') {
+      const t = secToMinSec(val);
+      inputHtml = `
+        <div class="fast-input-wrap">
+          <input class="fast-input${hasDone?' filled':''}" type="number" inputmode="numeric"
+            min="0" max="30" step="1" placeholder="m" value="${t.min}"
+            id="fi_${id}_a" tabindex="${idx*2+1}"
+            oninput="fastUpdateMinsec('${id}','a',this.value)"
+            onkeydown="handleFastKey(event,${idx},'a')">
+          <span class="fast-sep">:</span>
+          <input class="fast-input${hasDone?' filled':''}" type="number" inputmode="numeric"
+            min="0" max="59" step="1" placeholder="ss" value="${t.sec}"
+            id="fi_${id}_b" tabindex="${idx*2+2}"
+            oninput="fastUpdateMinsec('${id}','b',this.value)"
+            onkeydown="handleFastKey(event,${idx},'b')">
+          <span class="fast-unit">min:sec</span>
+        </div>`;
+    } else if (meta.type === 'seccent') {
+      const t = secToCent(val);
+      inputHtml = `
+        <div class="fast-input-wrap">
+          <input class="fast-input${hasDone?' filled':''}" type="number" inputmode="numeric"
+            min="0" max="99" step="1" placeholder="ss" value="${t.sec}"
+            id="fi_${id}_a" tabindex="${idx*2+1}"
+            oninput="fastUpdateSeccent('${id}','a',this.value)"
+            onkeydown="handleFastKey(event,${idx},'a')">
+          <span class="fast-sep">:</span>
+          <input class="fast-input${hasDone?' filled':''}" type="number" inputmode="numeric"
+            min="0" max="99" step="1" placeholder="cc" value="${t.cent}"
+            id="fi_${id}_b" tabindex="${idx*2+2}"
+            oninput="fastUpdateSeccent('${id}','b',this.value)"
+            onkeydown="handleFastKey(event,${idx},'b')">
+          <span class="fast-unit">sec:cent</span>
+        </div>`;
+    } else {
+      const step = '0.01';
+      inputHtml = `
+        <div class="fast-input-wrap">
+          <input class="fast-input${hasDone?' filled':''}" type="number" inputmode="decimal"
+            min="0" step="${step}" placeholder="—" value="${hasDone ? val : ''}"
+            id="fi_${id}_a" tabindex="${idx+1}"
+            oninput="fastUpdateSimple('${id}',this.value)"
+            onkeydown="handleFastKey(event,${idx},'a')">
+          <span class="fast-unit">${meta.unit}</span>
+        </div>`;
+    }
+
+    return `<div class="fast-row" id="row_${id}">
+      <div class="fast-row-name">${s.name || ''}</div>
+      ${inputHtml}
+      <div class="fast-row-done">${hasDone ? '✓' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+// Tab/Enter navigation between rows
+window.handleFastKey = (e, rowIdx, field) => {
+  if (e.key === 'Enter' || (e.key === 'Tab' && !e.shiftKey)) {
+    const meta = EVENT_META.find(ev => ev.key === selectedEvent);
+    const cls = dbData.classes[selectedClass]?.students || {};
+    const ids = Object.keys(cls).sort((a,b) => (cls[a].name||'').localeCompare(cls[b].name||''));
+    // If two-field and on field a, move to field b
+    if ((meta.type === 'minsec' || meta.type === 'seccent') && field === 'a') {
+      const nextB = document.getElementById(`fi_${ids[rowIdx]}_b`);
+      if (nextB) { e.preventDefault(); nextB.focus(); return; }
+    }
+    // Move to next row field a
+    const nextId = ids[rowIdx + 1];
+    if (nextId) {
+      e.preventDefault();
+      const next = document.getElementById(`fi_${nextId}_a`);
+      if (next) { next.focus(); next.select(); }
+    }
+  }
+};
+
+// Update functions
+window.fastUpdateSimple = (id, val) => {
+  const s = dbData.classes[selectedClass]?.students?.[id];
+  if (!s) return;
+  s[selectedEvent] = val === '' ? null : parseFloat(val);
+  // update checkmark live
+  const row = document.getElementById(`row_${id}`);
+  if (row) {
+    const done = row.querySelector('.fast-row-done');
+    const inp = document.getElementById(`fi_${id}_a`);
+    const hasDone = s[selectedEvent] !== null && s[selectedEvent] !== undefined;
+    if (done) done.textContent = hasDone ? '✓' : '';
+    if (inp) inp.classList.toggle('filled', hasDone);
+  }
+  saveAndRefreshProgress();
+};
+
+window.fastUpdateMinsec = (id, field, val) => {
+  const s = dbData.classes[selectedClass]?.students?.[id];
+  if (!s) return;
+  if (field === 'a') s._ma = val === '' ? null : parseInt(val);
+  if (field === 'b') s._mb = val === '' ? null : parseInt(val);
+  const m = s._ma !== undefined ? s._ma : null;
+  const sec = s._mb !== undefined ? s._mb : null;
+  s[selectedEvent] = (m !== null || sec !== null) ? ((m||0)*60 + (sec||0)) : null;
+  updateRowDone(id);
+  saveAndRefreshProgress();
+};
+
+window.fastUpdateSeccent = (id, field, val) => {
+  const s = dbData.classes[selectedClass]?.students?.[id];
+  if (!s) return;
+  if (field === 'a') s._sa = val === '' ? null : parseInt(val);
+  if (field === 'b') s._sb = val === '' ? null : parseInt(val);
+  const sec = s._sa !== undefined ? s._sa : null;
+  const cent = s._sb !== undefined ? s._sb : null;
+  s[selectedEvent] = (sec !== null || cent !== null) ? ((sec||0) + (cent||0)/100) : null;
+  updateRowDone(id);
+  saveAndRefreshProgress();
+};
+
+function updateRowDone(id) {
+  const s = dbData.classes[selectedClass]?.students?.[id];
+  if (!s) return;
+  const hasDone = s[selectedEvent] !== null && s[selectedEvent] !== undefined;
+  const row = document.getElementById(`row_${id}`);
+  if (!row) return;
+  const done = row.querySelector('.fast-row-done');
+  if (done) done.textContent = hasDone ? '✓' : '';
+  row.querySelectorAll('.fast-input').forEach(inp => inp.classList.toggle('filled', hasDone));
+}
+
+function saveAndRefreshProgress() {
+  saveData();
+  // refresh progress bar only
+  const cls = dbData.classes[selectedClass] || {};
+  const students = cls.students || {};
+  const ids = Object.keys(students);
+  const total = ids.length;
+  const filled = ids.filter(id => students[id][selectedEvent] !== null && students[id][selectedEvent] !== undefined).length;
+  const pct = total > 0 ? Math.round((filled/total)*100) : 0;
+  const pb = document.getElementById('entry-progress-bar');
+  const pr = document.getElementById('entry-progress');
+  if (pb) pb.style.width = pct + '%';
+  if (pr) pr.innerHTML = `<strong>${filled}/${total}</strong> élèves saisis pour <strong>${EVENT_META.find(e=>e.key===selectedEvent)?.label}</strong>`;
+  renderEventPicker();
+}
+
+// ── RELAY ─────────────────────────────────
+function renderRelayFields() {
+  const cls = dbData.classes[selectedClass] || {};
+  const rv = cls.relais;
+  const t = secToMinSec(rv);
+  const minEl = document.getElementById('relay-min');
+  const secEl = document.getElementById('relay-sec');
+  const totalEl = document.getElementById('relay-total');
+  if (minEl) { minEl.value = t.min; minEl.classList.toggle('filled', t.min !== ''); }
+  if (secEl) { secEl.value = t.sec; secEl.classList.toggle('filled', t.sec !== ''); }
+  if (totalEl) totalEl.textContent = rv !== null && rv !== undefined ? `= ${fmtTime(rv,'relais')}` : '';
+}
+
+window.updateRelayFromFields = () => {
+  if (!selectedClass) return;
+  if (!dbData.classes[selectedClass]) dbData.classes[selectedClass] = {};
+  const minEl = document.getElementById('relay-min');
+  const secEl = document.getElementById('relay-sec');
+  const totalEl = document.getElementById('relay-total');
+  const m = minEl?.value === '' ? null : parseInt(minEl.value);
+  const s = secEl?.value === '' ? null : parseInt(secEl.value);
+  const total = (m === null && s === null) ? null : ((m||0)*60 + (s||0));
+  dbData.classes[selectedClass].relais = total;
+  if (totalEl) totalEl.textContent = total !== null ? `= ${fmtTime(total,'relais')}` : '';
+  saveData();
+  renderEventPicker();
+};
+
+// ── STUDENTS ──────────────────────────────
+function renderStudents() {
+  renderEventPicker();
+  if (selectedEvent) selectEvent(selectedEvent);
+  renderStudentManageList();
+}
+
+function renderStudentManageList() {
+  const students = dbData.classes[selectedClass]?.students || {};
+  const ids = Object.keys(students).sort((a,b) => (students[a].name||'').localeCompare(students[b].name||''));
+  const el = document.getElementById('student-manage-list');
+  const badge = document.getElementById('student-count-badge');
+  if (badge) badge.textContent = `${ids.length} élève${ids.length !== 1 ? 's' : ''}`;
+  if (!el) return;
+  if (ids.length === 0) {
+    el.innerHTML = `<div style="padding:0.75rem 1rem;color:var(--text2);font-size:14px">Aucun élève encore — importez une liste ci-dessus.</div>`;
+    return;
+  }
+  el.innerHTML = ids.map(id => `
+    <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border2);gap:10px">
+      <span style="flex:1;font-size:14px;font-weight:500">${students[id].name||''}</span>
+      <button class="del-btn" onclick="deleteStudent('${id}')">✕</button>
+    </div>`).join('');
+}
+
+window.importStudents = () => {
+  const raw = document.getElementById('bulk-input').value.trim();
+  if (!raw) return;
+  const names = raw.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+  if (!dbData.classes[selectedClass]) dbData.classes[selectedClass] = {};
+  if (!dbData.classes[selectedClass].students) dbData.classes[selectedClass].students = {};
+  const existing = Object.values(dbData.classes[selectedClass].students).map(s => s.name?.toLowerCase());
+  let added = 0;
+  names.forEach(name => {
+    if (!existing.includes(name.toLowerCase())) {
+      const id = 'e' + Date.now() + Math.random().toString(36).slice(2,6);
+      dbData.classes[selectedClass].students[id] = { name };
+      existing.push(name.toLowerCase());
+      added++;
+    }
+  });
+  saveData();
+  document.getElementById('bulk-input').value = '';
+  document.getElementById('import-feedback').textContent = `${added} élève${added>1?'s':''} ajouté${added>1?'s':''}`;
+  setTimeout(() => { const el = document.getElementById('import-feedback'); if(el) el.textContent=''; }, 3000);
+  renderStudentManageList();
+  renderEventPicker();
+  if (selectedEvent && selectedEvent !== 'relais') renderFastList();
+};
+
+window.toggleStudentList = () => {}; // kept for compatibility
+
+window.addStudent = () => {
+  const inp = document.getElementById('new-student-input');
+  const name = inp.value.trim();
+  if (!name || !selectedClass) return;
+  if (!dbData.classes[selectedClass]) dbData.classes[selectedClass] = {};
+  if (!dbData.classes[selectedClass].students) dbData.classes[selectedClass].students = {};
+  const id = 'e' + Date.now();
+  dbData.classes[selectedClass].students[id] = { name };
+  saveData();
+  inp.value = '';
+  inp.focus();
+  renderStudentManageList();
+  renderEventPicker();
+  if (selectedEvent && selectedEvent !== 'relais') renderFastList();
+};
+
+window.deleteStudent = (id) => {
+  if (!confirm('Supprimer cet élève ?')) return;
+  delete dbData.classes[selectedClass].students[id];
+  saveData();
+  renderStudentManageList();
+  renderEventPicker();
+  if (selectedEvent && selectedEvent !== 'relais') renderFastList();
+};
+
+window.updatePerf = (id, key, val) => {
+  const s = dbData.classes[selectedClass]?.students?.[id];
+  if (!s) return;
+  s[key] = val === '' ? null : parseFloat(val);
+  saveData();
+};
+
+// 800m: read both fields, convert to total seconds
+window.updateR800 = (id, field, val) => {
+  const s = dbData.classes[selectedClass]?.students?.[id];
+  if (!s) return;
+  if (field === 'min') s._r800min = val === '' ? null : parseInt(val);
+  if (field === 'sec') s._r800sec = val === '' ? null : parseInt(val);
+  const mins = s._r800min !== undefined ? s._r800min : null;
+  const secs = s._r800sec !== undefined ? s._r800sec : null;
+  s.r800 = (mins !== null || secs !== null) ? ((mins||0)*60 + (secs||0)) : null;
+  saveData();
+};
+
+// Sprint: read both fields
+window.updateSprint = (id, field, val) => {
+  const s = dbData.classes[selectedClass]?.students?.[id];
+  if (!s) return;
+  if (field === 'sec') s._sprintSec = val === '' ? null : parseInt(val);
+  if (field === 'cent') s._sprintCent = val === '' ? null : parseInt(val);
+  const secs = s._sprintSec !== undefined ? s._sprintSec : null;
+  const cent = s._sprintCent !== undefined ? s._sprintCent : null;
+  s.sprint = (secs !== null || cent !== null) ? ((secs||0) + (cent||0)/100) : null;
+  saveData();
+};
+
+window.updateRelayFromFields = () => {
+  if (!selectedClass) return;
+  const minEl = document.getElementById('relay-min');
+  const secEl = document.getElementById('relay-sec');
+  const totalEl = document.getElementById('relay-total');
+  const m = minEl.value === '' ? null : parseInt(minEl.value);
+  const s = secEl.value === '' ? null : parseInt(secEl.value);
+  if (m === null && s === null) {
+    dbData.classes[selectedClass].relais = null;
+    if (totalEl) totalEl.textContent = '';
+  } else {
+    const total = ((m || 0) * 60) + (s || 0);
+    dbData.classes[selectedClass].relais = total;
+    if (totalEl) totalEl.textContent = `= ${total}s`;
+  }
+  saveData();
+};
+
+// ── RANKING ───────────────────────────────
+function avg(students, key) {
+  const vals = Object.values(students)
+    .map(s => s[key])
+    .filter(v => v !== null && v !== undefined && v !== '' && !isNaN(parseFloat(v)))
+    .map(parseFloat);
+  return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+}
+
+function assignPoints(classStats, eventKey, lowerBetter) {
+  const withData = classStats.filter(cs => cs.avgs[eventKey] !== null);
+  if (withData.length === 0) return;
+  const n = withData.length;
+  const sorted = [...withData].sort((a,b) =>
+    lowerBetter ? a.avgs[eventKey] - b.avgs[eventKey] : b.avgs[eventKey] - a.avgs[eventKey]
+  );
+  sorted.forEach((cs, i) => {
+    cs.pts[eventKey] = Math.round(10 - (i / Math.max(n-1, 1)) * 9);
+  });
+}
+
+function renderRanking() {
+  const classes = Object.keys(dbData.classes || {}).sort();
+  const totalStudents = classes.reduce((n,c) => n + Object.keys(dbData.classes[c]?.students||{}).length, 0);
+  const classesWithData = classes.filter(c => {
+    const students = Object.values(dbData.classes[c]?.students||{});
+    const hasStudentData = EVENTS.some(e => students.some(s => s[e.key] !== null && s[e.key] !== undefined));
+    const hasRelay = dbData.classes[c]?.relais !== null && dbData.classes[c]?.relais !== undefined;
+    return hasStudentData || hasRelay;
+  });
+
+  document.getElementById('ranking-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Classes</div><div class="stat-value">${classes.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Élèves</div><div class="stat-value">${totalStudents}</div></div>
+    <div class="stat-card"><div class="stat-label">Avec résultats</div><div class="stat-value">${classesWithData.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Épreuves</div><div class="stat-value">${EVENTS.length + 1}</div></div>
+  `;
+
+  const ALL_EVENTS = [...EVENTS, RELAY];
+
+  const classStats = classes.map(c => {
+    const students = dbData.classes[c]?.students || {};
+    const avgs = {};
+    EVENTS.forEach(e => { avgs[e.key] = avg(students, e.key); });
+    // Relay: direct class value
+    const rv = dbData.classes[c]?.relais;
+    avgs[RELAY.key] = (rv !== null && rv !== undefined && rv !== '' && !isNaN(parseFloat(rv))) ? parseFloat(rv) : null;
+    return { cls: c, avgs, pts: {}, total: 0 };
+  });
+
+  ALL_EVENTS.forEach(e => assignPoints(classStats, e.key, e.lowerBetter));
+  classStats.forEach(cs => { cs.total = Object.values(cs.pts).reduce((a,b)=>a+b,0); });
+
+  const withPts = classStats.filter(cs => cs.total > 0);
+  const maxTotal = Math.max(...withPts.map(cs=>cs.total), 1);
+  classStats.sort((a,b) => b.total - a.total);
+
+  const medals = ['🥇','🥈','🥉'];
+  let rank = 0;
+  const tbody = document.getElementById('ranking-tbody');
+  tbody.innerHTML = classStats.map((cs) => {
+    const hasData = cs.total > 0;
+    if (hasData) rank++;
+    const medal = rank <= 3 && hasData ? `<span class="rank-medal">${medals[rank-1]}</span>` : `<span class="rank-pos">${hasData ? rank : '—'}</span>`;
+    const evCells = ALL_EVENTS.map(e => {
+      const p = cs.pts[e.key];
+      if (p === undefined) return `<td><span class="pts-none">—</span></td>`;
+      const cls = p === 10 ? 'pts-10' : p >= 8 ? 'pts-9' : p >= 6 ? 'pts-8' : p >= 4 ? 'pts-7' : p >= 2 ? 'pts-6' : 'pts-low';
+      const val = cs.avgs[e.key];
+      const displayVal = fmtTime(val, e.key);
+      const avg_val = val !== null ? `<br><span style="font-size:11px;color:var(--text3)">${displayVal}</span>` : '';
+      return `<td><span class="event-score ${cls}">${p}</span>${avg_val}</td>`;
+    }).join('');
+
+    const barW = hasData ? Math.round((cs.total / maxTotal) * 100) : 0;
+    const totalCell = hasData
+      ? `<div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:${barW}%"></div></div><span style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--accent);min-width:28px">${cs.total}</span></div>`
+      : `<span class="pts-none">—</span>`;
+
+    return `<tr>
+      <td>${medal}</td>
+      <td class="rank-class">${cs.cls}</td>
+      ${evCells}
+      <td>${totalCell}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── INIT ──────────────────────────────────
+document.getElementById('pwd-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') window.checkPwd();
+});
+</script>
+</body>
+</html>
