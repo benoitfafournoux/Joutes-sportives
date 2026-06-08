@@ -325,6 +325,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
       <div class="table-wrap"><div id="sport-events-list"></div></div>
       <p class="notice" style="margin-top:.75rem">Les épreuves par défaut ne peuvent pas être supprimées.</p>
+
+      <div style="margin-top:2rem">
+        <div class="section-title" style="margin-bottom:.75rem;font-size:16px">🧹 Nettoyage des classes</div>
+        <div class="table-wrap" style="padding:1rem 1.25rem">
+          <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">Supprime les classes dont le nom est un identifiant technique (cls_178...) sans élèves ni résultats.</p>
+          <button class="btn btn-sm btn-danger" onclick="cleanupBrokenClasses()">Supprimer les classes mal nommées</button>
+          <span id="cleanup-feedback" style="font-size:13px;color:var(--green);margin-left:12px"></span>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -721,24 +730,31 @@ function getClassOrder() {
   return order;
 }
 
+// Retourne le nom affiché d'une classe (utilise .name si dispo, sinon la clé)
+function getClassName(clsId) {
+  return evData.classes[clsId]?.name || clsId;
+}
+
 function renderClasses() {
   const grid = document.getElementById('classes-grid');
   const classes = getClassOrder();
   const isAdmin = role === 'admin';
 
-  grid.innerHTML = classes.map((cls, idx) => {
-    const count = Object.keys(evData.classes[cls]?.students||{}).length;
+  grid.innerHTML = classes.map((clsId, idx) => {
+    const cls = evData.classes[clsId] || {};
+    const name = cls.name || clsId;
+    const count = Object.keys(cls.students||{}).length;
     const canLeft  = idx > 0;
     const canRight = idx < classes.length - 1;
     const arrows = isAdmin ? `<div class="order-arrows">
-      <button class="arrow-btn" ${canLeft?'':'disabled'} onclick="moveClass(event,'${cls}',-1)">◀</button>
+      <button class="arrow-btn" ${canLeft?'':'disabled'} onclick="moveClass(event,'${clsId}',-1)">◀</button>
       <span class="order-label">ordonner</span>
-      <button class="arrow-btn" ${canRight?'':'disabled'} onclick="moveClass(event,'${cls}',1)">▶</button>
+      <button class="arrow-btn" ${canRight?'':'disabled'} onclick="moveClass(event,'${clsId}',1)">▶</button>
     </div>` : '';
-    return `<div class="class-card${cls===selectedClass?' selected':''}">
+    return `<div class="class-card${clsId===selectedClass?' selected':''}">
       ${arrows}
-      <div class="class-card-name" onclick="selectClass('${cls}')">${cls}</div>
-      <div class="class-card-count" onclick="selectClass('${cls}')">${count} élève${count!==1?'s':''}</div>
+      <div class="class-card-name" onclick="selectClass('${clsId}')">${name}</div>
+      <div class="class-card-count" onclick="selectClass('${clsId}')">${count} élève${count!==1?'s':''}</div>
     </div>`;
   }).join('');
 
@@ -747,18 +763,17 @@ function renderClasses() {
   }
 }
 
-window.moveClass = (e, cls, dir) => {
+window.moveClass = (e, clsId, dir) => {
   e.stopPropagation();
   e.preventDefault();
   const order = getClassOrder();
-  const idx = order.indexOf(cls);
+  const idx = order.indexOf(clsId);
   const newIdx = idx + dir;
   if (newIdx < 0 || newIdx >= order.length) return;
   const tmp = order[idx];
   order[idx] = order[newIdx];
   order[newIdx] = tmp;
   evData.classOrder = [...order];
-  // Bloquer le listener Firebase pendant 3 secondes
   pauseListener = true;
   set(ref(db, `joutesData/${currentEvId}/classOrder`), [...order]).then(() => {
     renderClasses();
@@ -766,11 +781,11 @@ window.moveClass = (e, cls, dir) => {
   });
 };
 
-window.selectClass = cls => {
-  selectedClass = cls;
+window.selectClass = clsId => {
+  selectedClass = clsId;
   selectedSportKey = null;
   document.getElementById('class-detail').style.display = 'block';
-  document.getElementById('class-detail-title').textContent = cls;
+  document.getElementById('class-detail-title').textContent = getClassName(clsId);
   renderClasses();
   renderClassDetail();
 };
@@ -778,18 +793,26 @@ window.selectClass = cls => {
 window.addClassConfirm = () => {
   const name = document.getElementById('new-class-input').value.trim();
   if (!name) return;
-  if (evData.classes[name]) { alert('Cette classe existe déjà.'); return; }
-  evData.classes[name] = { students:{} };
+  // Vérifier doublon sur le nom affiché
+  const alreadyExists = Object.values(evData.classes||{}).some(c => (c.name||'').toLowerCase() === name.toLowerCase());
+  if (alreadyExists) { alert('Cette classe existe déjà.'); return; }
+  // Créer un ID propre basé sur le nom (sans caractères spéciaux)
+  const safeId = 'cls_' + name.replace(/[^a-zA-Z0-9]/g, '_') + '_' + Date.now().toString().slice(-4);
+  if (!evData.classes) evData.classes = {};
+  evData.classes[safeId] = { name, students:{} };
+  if (!evData.classOrder) evData.classOrder = [];
+  evData.classOrder.push(safeId);
   saveEvData();
   closeModal('modal-class');
   document.getElementById('new-class-input').value = '';
-  selectClass(name);
+  selectClass(safeId);
 };
 
 window.deleteClass = () => {
   if (!selectedClass) return;
+  const name = getClassName(selectedClass);
   const count = Object.keys(evData.classes[selectedClass]?.students||{}).length;
-  if (!confirm(`Supprimer ${selectedClass}${count>0?` et ses ${count} élèves`:''}?`)) return;
+  if (!confirm(`Supprimer ${name}${count>0?` et ses ${count} élèves`:''}?`)) return;
   delete evData.classes[selectedClass];
   evData.classOrder = (evData.classOrder||[]).filter(c => c !== selectedClass);
   saveEvData();
@@ -809,9 +832,9 @@ function renderStudentList() {
         <span style="flex:1;font-size:14px;font-weight:500">${students[id].name||''}</span>
         ${isAdmin ? `<button class="del-btn" onclick="deleteStudent('${id}')">✕</button>` : ''}
       </div>`).join('');
-  // Masquer ajout si pas admin
   document.querySelector('.add-row').style.display = isAdmin ? 'flex' : 'none';
-  document.querySelector('[id="bulk-input"]').closest('div').style.display = isAdmin ? '' : 'none';
+  const bulkDiv = document.getElementById('bulk-input')?.closest('div');
+  if (bulkDiv) bulkDiv.style.display = isAdmin ? '' : 'none';
 }
 
 window.importStudents = () => {
@@ -1117,9 +1140,34 @@ function renderRanking() {
     }).join('');
     const barW=hasData?Math.round(cs.total/maxTotal*100):0;
     const totalCell=hasData?`<div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:${barW}%"></div></div><strong style="font-family:'Syne',sans-serif;font-size:15px;color:var(--accent)">${cs.total}</strong></div>`:`<span class="pts-none">—</span>`;
-    return `<tr><td>${medal}</td><td style="font-family:'Syne',sans-serif;font-weight:700">${cs.cls}</td>${evCells}<td>${totalCell}</td></tr>`;
+    return `<tr><td>${medal}</td><td style="font-family:'Syne',sans-serif;font-weight:700">${getClassName(cs.cls)}</td>${evCells}<td>${totalCell}</td></tr>`;
   }).join('');
 }
+
+window.cleanupBrokenClasses = () => {
+  const classes = evData.classes || {};
+  let removed = 0;
+  Object.keys(classes).forEach(id => {
+    const cls = classes[id];
+    const name = cls.name || id;
+    const isBroken = !cls.name || /^cls_\d{10,}/.test(name);
+    const isEmpty = Object.keys(cls.students||{}).length === 0;
+    if (isBroken && isEmpty) {
+      delete evData.classes[id];
+      evData.classOrder = (evData.classOrder||[]).filter(c => c !== id);
+      removed++;
+    }
+  });
+  if (removed === 0) { alert('Aucune classe mal nommée trouvée !'); return; }
+  saveEvData();
+  const fb = document.getElementById('cleanup-feedback');
+  if (fb) { fb.textContent = `${removed} classe${removed>1?'s':''} supprimée${removed>1?'s':''}`; setTimeout(()=>{fb.textContent='';},3000); }
+  renderClasses();
+  if (selectedClass && !evData.classes[selectedClass]) {
+    selectedClass = null;
+    document.getElementById('class-detail').style.display = 'none';
+  }
+};
 
 // ── MODALS ─────────────────────────────────
 window.openModal  = id => document.getElementById(id).style.display='flex';
