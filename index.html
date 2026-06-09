@@ -243,6 +243,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="nav-btn active" onclick="showView('saisie',this)">Saisie</button>
       <button class="nav-btn" onclick="showView('classement',this)">Classement</button>
       <button class="nav-btn" id="nav-epreuves" onclick="showView('epreuves',this)">Épreuves</button>
+      <button class="nav-btn" onclick="showView('impression',this)">🖨️ PDF</button>
     </nav>
   </header>
   <main class="main">
@@ -258,7 +259,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div id="class-detail" style="display:none">
         <div class="section-header">
           <div class="section-title" id="class-detail-title"></div>
-          <button class="btn btn-sm btn-danger" id="btn-del-class" onclick="deleteClass()">Supprimer</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-sm btn-danger" id="btn-reset-class" onclick="resetClassResults()">🗑️ Effacer résultats</button>
+            <span id="reset-class-feedback" style="font-size:13px;color:var(--green)"></span>
+            <button class="btn btn-sm btn-danger" id="btn-del-class" onclick="deleteClass()">Supprimer</button>
+          </div>
         </div>
 
         <!-- Élèves -->
@@ -296,8 +301,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div id="entry-collective" style="display:none">
           <div class="entry-wrap" style="padding:1rem 1.25rem">
             <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:.5rem" id="collective-title"></div>
-            <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">Temps unique pour toute la classe</div>
-            <div class="entry-inputs" id="collective-inputs"></div>
+            <div style="font-size:13px;color:var(--text2);margin-bottom:1rem" id="collective-sub">Temps unique pour toute la classe</div>
+            <div id="collective-inputs"></div>
           </div>
         </div>
         <p class="notice">Sauvegarde automatique. <strong>Courses</strong> : moins = meilleur. <strong>Sauts/Lancers</strong> : plus = meilleur.</p>
@@ -333,6 +338,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
 
       <div style="margin-top:2rem">
+        <div class="section-title" style="margin-bottom:.75rem;font-size:16px">🗑️ Réinitialisation</div>
+        <div class="table-wrap" style="padding:1rem 1.25rem">
+          <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">Efface tous les résultats de toutes les classes. Les noms d'élèves sont conservés.</p>
+          <button class="btn btn-sm btn-danger" onclick="resetAllResults()">🗑️ Effacer tous les résultats</button>
+          <span id="reset-all-feedback" style="font-size:13px;color:var(--green);margin-left:12px"></span>
+        </div>
+      </div>
+
+      <div style="margin-top:2rem">
         <div class="section-title" style="margin-bottom:.75rem;font-size:16px">🧹 Nettoyage des classes</div>
         <div class="table-wrap" style="padding:1rem 1.25rem">
           <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">Supprime les classes dont le nom est un identifiant technique sans élèves ni résultats.</p>
@@ -340,6 +354,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           <span id="cleanup-feedback" style="font-size:13px;color:var(--green);margin-left:12px"></span>
         </div>
       </div>
+    </div>
+
+    <!-- IMPRESSION -->
+    <div id="view-impression" class="view">
+      <div class="section-title" style="margin-bottom:1.25rem">🖨️ Télécharger en PDF</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:2rem">
+        <div class="table-wrap" style="padding:1.25rem">
+          <div style="font-size:28px;margin-bottom:.5rem">🏆</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:.4rem">Classement général</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">Toutes les classes, points et moyennes par épreuve</div>
+          <button class="btn btn-accent btn-sm" onclick="printRanking()">⬇ Télécharger PDF</button>
+        </div>
+        <div class="table-wrap" style="padding:1.25rem">
+          <div style="font-size:28px;margin-bottom:.5rem">📋</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:.4rem">Résultats par classe</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">Une page par classe avec tous les résultats et la moyenne</div>
+          <div style="display:flex;flex-direction:column;gap:8px" id="print-class-buttons"></div>
+        </div>
+      </div>
+      <p class="notice">Les PDFs s'ouvrent dans un nouvel onglet — utilisez <strong>Ctrl+P → Enregistrer en PDF</strong>.</p>
     </div>
 
   </main>
@@ -432,7 +466,7 @@ const DEFAULT_SPORT_EVENTS = [
   { key:'long',   label:'Longueur', icon:'📏', type:'mcm',     unit:'m:cm',    collective:false, lowerBetter:false, locked:true },
   { key:'lance',  label:'Lancer',   icon:'🏋️', type:'mcm',     unit:'m:cm',    collective:false, lowerBetter:false, locked:true },
   { key:'sprint', label:'Sprint',   icon:'⚡', type:'seccent', unit:'sec:cent',collective:false, lowerBetter:true,  locked:true },
-  { key:'relais', label:'Relais',   icon:'🏁', type:'minsec',  unit:'min:sec', collective:true,  lowerBetter:true,  locked:true },
+  { key:'relais', label:'Relais',   icon:'🏁', type:'minsec',  unit:'min:sec', collective:true,  lowerBetter:true,  locked:true, dual:true },
 ];
 
 const fbApp = firebase.initializeApp(firebaseConfig);
@@ -552,6 +586,7 @@ window.switchRole = () => {
     document.getElementById('nav-epreuves').style.display  = isAdmin ? '' : 'none';
     document.getElementById('btn-add-class').style.display = isAdmin ? '' : 'none';
     document.getElementById('btn-del-class').style.display = isAdmin ? '' : 'none';
+    if(document.getElementById('btn-reset-class')) document.getElementById('btn-reset-class').style.display = isAdmin ? '' : 'none';
     renderClasses();
   }
 };
@@ -624,6 +659,7 @@ window.openEvent = id => {
   document.getElementById('nav-epreuves').style.display  = isAdmin ? '' : 'none';
   document.getElementById('btn-add-class').style.display = isAdmin ? '' : 'none';
   document.getElementById('btn-del-class').style.display = isAdmin ? '' : 'none';
+    if(document.getElementById('btn-reset-class')) document.getElementById('btn-reset-class').style.display = isAdmin ? '' : 'none';
 
   showScreen('screen-app');
   // Activer vue saisie
@@ -678,6 +714,7 @@ window.showView = (v, btn) => {
   btn.classList.add('active');
   if (v === 'classement') renderRanking();
   if (v === 'epreuves')   { renderSportEventsList(); renderThresholdsList(); }
+  if (v === 'impression') renderImpressionView();
 };
 
 function renderAll() {
@@ -1161,25 +1198,60 @@ function refreshProgress(key) {
 // ── COLLECTIVE ENTRY ───────────────────────
 function renderCollectiveEntry(ev) {
   const cls = evData.classes[selectedClass]||{};
-  const val = cls[ev.key], hasDone=val!==null&&val!==undefined;
-  const d = decodeValue(ev.type, val);
   document.getElementById('collective-title').textContent = `${ev.icon} ${ev.label} — résultat collectif`;
-  let html = '';
+
+  if (ev.dual) {
+    const vG=cls[ev.key+'_g'], vF=cls[ev.key+'_f'];
+    const hG=vG!==null&&vG!==undefined, hF=vF!==null&&vF!==undefined;
+    const dG=decodeValue(ev.type,vG), dF=decodeValue(ev.type,vF);
+    const [lA,lB]=inputLabels(ev.type);
+    const avgVal=hG&&hF?(vG+vF)/2:hG?vG:hF?vF:null;
+    document.getElementById('collective-sub').textContent='Un temps pour les garçons, un pour les filles — moyenne pour le classement';
+    document.getElementById('collective-inputs').innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:1.25rem">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">👦 Garçons</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input class="ei${hG?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hG&&dG.a!==''?dG.a:''}" id="coll_g_a" onfocus="this.select()" onchange="saveDualAB('${ev.key}','g','a',this.value)">
+            <span class="ei-sep">:</span>
+            <input class="ei${hG?' filled':''}" type="text" inputmode="numeric" placeholder="${lB}" value="${hG&&dG.b!==''?dG.b:''}" id="coll_g_b" onfocus="this.select()" onchange="saveDualAB('${ev.key}','g','b',this.value)">
+            <span class="ei-label">${ev.unit}</span>
+            <span style="color:var(--green);font-size:16px">${hG?'✓':''}</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">👧 Filles</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input class="ei${hF?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hF&&dF.a!==''?dF.a:''}" id="coll_f_a" onfocus="this.select()" onchange="saveDualAB('${ev.key}','f','a',this.value)">
+            <span class="ei-sep">:</span>
+            <input class="ei${hF?' filled':''}" type="text" inputmode="numeric" placeholder="${lB}" value="${hF&&dF.b!==''?dF.b:''}" id="coll_f_b" onfocus="this.select()" onchange="saveDualAB('${ev.key}','f','b',this.value)">
+            <span class="ei-label">${ev.unit}</span>
+            <span style="color:var(--green);font-size:16px">${hF?'✓':''}</span>
+          </div>
+        </div>
+        <div style="font-size:14px;color:var(--text2);padding-top:.5rem;border-top:1px solid var(--border2)">${avgVal!==null?`Moyenne : <strong>${fmtValue(ev.type,avgVal)}</strong>`:''}</div>
+      </div>`;
+    return;
+  }
+
+  // Simple collective
+  const val=cls[ev.key], hasDone=val!==null&&val!==undefined;
+  const d=decodeValue(ev.type,val);
+  document.getElementById('collective-sub').textContent='Temps unique pour toute la classe';
+  let html='';
   if (ev.type==='number') {
-    html=`<input class="ei${hasDone?' filled':''}" type="text" inputmode="decimal" placeholder="—" value="${hasDone?d.a:''}"
-      onfocus="this.select()" onchange="saveCollective('${ev.key}','${ev.type}',this.value,'')">
-      <span class="ei-label">${ev.unit}</span>`;
+    html=`<div class="entry-inputs"><input class="ei${hasDone?' filled':''}" type="text" inputmode="decimal" placeholder="—" value="${hasDone?d.a:''}" onfocus="this.select()" onchange="saveCollective('${ev.key}','${ev.type}',this.value,'')"><span class="ei-label">${ev.unit}</span></div>`;
   } else {
     const [lA,lB]=inputLabels(ev.type);
-    html=`<input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hasDone&&d.a!==''?d.a:''}"
-        id="coll_a" onfocus="this.select()" onchange="saveCollAB('${ev.key}','${ev.type}','a',this.value)">
+    html=`<div class="entry-inputs">
+      <input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hasDone&&d.a!==''?d.a:''}" id="coll_a" onfocus="this.select()" onchange="saveCollAB('${ev.key}','${ev.type}','a',this.value)">
       <span class="ei-sep">:</span>
-      <input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric" placeholder="${lB}" value="${hasDone&&d.b!==''?d.b:''}"
-        id="coll_b" onfocus="this.select()" onchange="saveCollAB('${ev.key}','${ev.type}','b',this.value)">
+      <input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric" placeholder="${lB}" value="${hasDone&&d.b!==''?d.b:''}" id="coll_b" onfocus="this.select()" onchange="saveCollAB('${ev.key}','${ev.type}','b',this.value)">
       <span class="ei-label">${ev.unit}</span>
-      <span id="coll-total" style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDone?'= '+fmtValue(ev.type,val):''}</span>`;
+      <span id="coll-total" style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDone?'= '+fmtValue(ev.type,val):''}</span>
+    </div>`;
   }
-  document.getElementById('collective-inputs').innerHTML = html;
+  document.getElementById('collective-inputs').innerHTML=html;
 }
 
 window.saveCollective = (key, type, aVal, bVal) => {
@@ -1239,11 +1311,20 @@ function avg(students, key) {
 }
 
 function assignPoints(classStats, eventKey, lowerBetter) {
-  const withData = classStats.filter(cs=>cs.avgs[eventKey]!==null);
+  const withData = classStats.filter(cs => cs.avgs[eventKey] !== null);
   if (!withData.length) return;
-  const sorted = [...withData].sort((a,b)=>lowerBetter?a.avgs[eventKey]-b.avgs[eventKey]:b.avgs[eventKey]-a.avgs[eventKey]);
+  const sorted = [...withData].sort((a,b) => lowerBetter
+    ? a.avgs[eventKey] - b.avgs[eventKey]
+    : b.avgs[eventKey] - a.avgs[eventKey]);
   const n = sorted.length;
-  sorted.forEach((cs,i)=>{ cs.pts[eventKey]=n-i; }); // 1er=N, dernier=1
+  let i = 0;
+  while (i < n) {
+    let j = i;
+    while (j < n && sorted[j].avgs[eventKey] === sorted[i].avgs[eventKey]) j++;
+    const pts = n - i;
+    for (let k = i; k < j; k++) sorted[k].pts[eventKey] = pts;
+    i = j;
+  }
 }
 
 function renderRanking() {
@@ -1261,10 +1342,21 @@ function renderRanking() {
     const students=evData.classes[c]?.students||{};
     const avgs={};
     events.forEach(e=>{
-      if (e.collective) { const rv=evData.classes[c]?.[e.key]; avgs[e.key]=(rv!==null&&rv!==undefined&&!isNaN(parseFloat(rv)))?parseFloat(rv):null; }
-      else avgs[e.key]=avg(students,e.key);
+      if (e.dual) {
+        const vG=evData.classes[c]?.[e.key+'_g'], vF=evData.classes[c]?.[e.key+'_f'];
+        const hG=vG!==null&&vG!==undefined, hF=vF!==null&&vF!==undefined;
+        if (hG&&hF) avgs[e.key]=(applyThreshold(e.key,parseFloat(vG))+applyThreshold(e.key,parseFloat(vF)))/2;
+        else if (hG) avgs[e.key]=applyThreshold(e.key,parseFloat(vG));
+        else if (hF) avgs[e.key]=applyThreshold(e.key,parseFloat(vF));
+        else avgs[e.key]=null;
+      } else if (e.collective) {
+        const rv=evData.classes[c]?.[e.key];
+        avgs[e.key]=(rv!==null&&rv!==undefined&&!isNaN(parseFloat(rv)))?applyThreshold(e.key,parseFloat(rv)):null;
+      } else {
+        avgs[e.key]=avg(students,e.key);
+      }
     });
-    return {cls:c,avgs,pts:{},total:0};
+    return {cls:c,name:getClassName(c),avgs,pts:{},total:0};
   });
 
   events.forEach(e=>assignPoints(classStats,e.key,e.lowerBetter));
@@ -1316,6 +1408,142 @@ window.cleanupBrokenClasses = () => {
     selectedClass = null;
     document.getElementById('class-detail').style.display = 'none';
   }
+};
+
+// ── RELAIS DUAL ────────────────────────────
+window.saveDualAB = (key, gender, field, val) => {
+  if (!selectedClass) return;
+  const cls = evData.classes[selectedClass];
+  const tA=`_dual_${key}_${gender}_a`, tB=`_dual_${key}_${gender}_b`;
+  if (field==='a') cls[tA]=val;
+  if (field==='b') cls[tB]=val;
+  const ev = getSportEvent(key);
+  cls[key+'_'+gender] = encodeValue(ev.type, cls[tA]!==undefined?cls[tA]:'', cls[tB]!==undefined?cls[tB]:'');
+  const vG=cls[key+'_g'], vF=cls[key+'_f'];
+  const hG=vG!==null&&vG!==undefined, hF=vF!==null&&vF!==undefined;
+  if (hG&&hF) cls[key]=(vG+vF)/2;
+  else if (hG) cls[key]=vG;
+  else if (hF) cls[key]=vF;
+  else cls[key]=null;
+  const avgEl=document.querySelector('#collective-inputs [style*="border-top"]');
+  if (avgEl&&cls[key]!==null) avgEl.innerHTML=`Moyenne : <strong>${fmtValue(ev.type,cls[key])}</strong>`;
+  ['g','f'].forEach(g=>{
+    const v=cls[key+'_'+g], hasDone=v!==null&&v!==undefined;
+    [`coll_${g}_a`,`coll_${g}_b`].forEach(id=>{
+      const el=document.getElementById(id);
+      if (el) el.classList.toggle('filled',hasDone);
+    });
+  });
+  saveEvData(); renderEventPicker();
+};
+
+// ── SEUILS UI ──────────────────────────────
+window.saveThresholdAB = (key, bound, field, val) => {
+  if (!_thresholdTemp) window._thresholdTemp={};
+  const tk=`${key}_${bound}`;
+  if (!window._thresholdTemp[tk]) window._thresholdTemp[tk]={a:'',b:''};
+  window._thresholdTemp[tk][field]=val;
+  const ev=getSportEvent(key);
+  if (!ev) return;
+  const encoded=encodeValue(ev.type,window._thresholdTemp[tk].a,window._thresholdTemp[tk].b);
+  if (!evData.thresholds) evData.thresholds={};
+  if (!evData.thresholds[key]) evData.thresholds[key]={max:null,min:null};
+  evData.thresholds[key][bound]=encoded;
+  saveEvData();
+};
+window.saveThresholdSingle = (key, bound, val) => {
+  if (!evData.thresholds) evData.thresholds={};
+  if (!evData.thresholds[key]) evData.thresholds[key]={max:null,min:null};
+  evData.thresholds[key][bound] = val===''?null:parseFloat(val);
+  saveEvData();
+};
+const _thresholdTemp={};
+
+// ── RESET RÉSULTATS ────────────────────────
+function getResultKeys() {
+  return allSportEvents().flatMap(e=>e.dual?[e.key,e.key+'_g',e.key+'_f']:[e.key]);
+}
+window.resetClassResults = () => {
+  if (!selectedClass) return;
+  if (!confirm(`Effacer tous les résultats de ${getClassName(selectedClass)} ?\nLes élèves sont conservés.`)) return;
+  const cls=evData.classes[selectedClass], keys=getResultKeys();
+  keys.forEach(k=>{if(cls[k]!==undefined)delete cls[k];});
+  Object.values(cls.students||{}).forEach(s=>{keys.forEach(k=>{if(s[k]!==undefined)delete s[k];});});
+  saveEvData(); renderClassDetail();
+  if (selectedSportKey) selectSportEvent(selectedSportKey);
+};
+window.resetAllResults = () => {
+  if (!confirm('Effacer TOUS les résultats de toutes les classes ?\nLes élèves sont conservés.')) return;
+  const keys=getResultKeys();
+  Object.values(evData.classes||{}).forEach(cls=>{
+    keys.forEach(k=>{if(cls[k]!==undefined)delete cls[k];});
+    Object.values(cls.students||{}).forEach(s=>{keys.forEach(k=>{if(s[k]!==undefined)delete s[k];});});
+  });
+  saveEvData();
+  if (selectedClass) renderClassDetail();
+  if (selectedSportKey) selectSportEvent(selectedSportKey);
+};
+window.cleanupBrokenClasses = () => {
+  const classes=evData.classes||{}; let removed=0;
+  Object.keys(classes).forEach(id=>{
+    const cls=classes[id], name=cls.name||id;
+    const isBroken=!cls.name||/^cls_\d{10,}/.test(name);
+    const isEmpty=Object.keys(cls.students||{}).length===0;
+    if (isBroken&&isEmpty){delete evData.classes[id];evData.classOrder=(evData.classOrder||[]).filter(c=>c!==id);removed++;}
+  });
+  if (removed===0){alert('Aucune classe mal nommée !');return;}
+  saveEvData(); renderClasses();
+  if (selectedClass&&!evData.classes[selectedClass]){selectedClass=null;document.getElementById('class-detail').style.display='none';}
+};
+
+// ── IMPRESSION PDF ─────────────────────────
+function renderImpressionView() {
+  const btns=document.getElementById('print-class-buttons');
+  if (!btns) return;
+  const classes=getClassOrder();
+  if (!classes.length){btns.innerHTML=`<div style="font-size:13px;color:var(--text2)">Aucune classe.</div>`;return;}
+  btns.innerHTML=classes.map(id=>`<button class="btn btn-sm" style="text-align:left" onclick="printClass('${id}')">⬇ ${getClassName(id)}</button>`).join('');
+}
+window.printRanking = () => {
+  const evName=document.getElementById('header-event-name')?.textContent||'Joutes';
+  const events=allSportEvents(), classes=getClassOrder();
+  const classStats=classes.map(c=>{
+    const students=evData.classes[c]?.students||{}, avgs={};
+    events.forEach(e=>{
+      if (e.dual){const vG=evData.classes[c]?.[e.key+'_g'],vF=evData.classes[c]?.[e.key+'_f'];const hG=vG!=null,hF=vF!=null;if(hG&&hF)avgs[e.key]=(applyThreshold(e.key,parseFloat(vG))+applyThreshold(e.key,parseFloat(vF)))/2;else if(hG)avgs[e.key]=applyThreshold(e.key,parseFloat(vG));else if(hF)avgs[e.key]=applyThreshold(e.key,parseFloat(vF));else avgs[e.key]=null;}
+      else if(e.collective){const rv=evData.classes[c]?.[e.key];avgs[e.key]=(rv!=null)?applyThreshold(e.key,parseFloat(rv)):null;}
+      else avgs[e.key]=avg(students,e.key);
+    });
+    return{cls:c,name:getClassName(c),avgs,pts:{},total:0};
+  });
+  events.forEach(e=>assignPoints(classStats,e.key,e.lowerBetter));
+  classStats.forEach(cs=>{cs.total=Object.values(cs.pts).reduce((a,b)=>a+b,0);});
+  classStats.sort((a,b)=>b.total-a.total);
+  const medals=['🥇','🥈','🥉']; let rank=0;
+  const rows=classStats.map(cs=>{
+    const hasData=cs.total>0; if(hasData)rank++;
+    const medal=rank<=3&&hasData?medals[rank-1]:(hasData?rank:'—');
+    const cells=events.map(e=>{const p=cs.pts[e.key],v=cs.avgs[e.key];return`<td style="text-align:center;padding:6px 8px;border:1px solid #ddd">${p!==undefined?`<strong>${p}pts</strong><br><span style="font-size:11px;color:#666">${v!==null?fmtValue(e.type,v):'—'}</span>`:'—'}</td>`;}).join('');
+    return`<tr style="background:${rank===1?'#FFF9C4':rank===2?'#F5F5F5':rank===3?'#FFF0E0':'white'}"><td style="padding:6px 8px;border:1px solid #ddd;text-align:center">${medal}</td><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700">${cs.name}</td>${cells}<td style="padding:6px 8px;border:1px solid #ddd;text-align:center;font-weight:700;color:#D4522A">${cs.total}</td></tr>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Classement — ${evName}</title><style>body{font-family:Arial,sans-serif;padding:20px;font-size:13px}h1{font-size:20px;margin-bottom:4px}h2{font-size:14px;color:#666;font-weight:normal;margin-bottom:16px}table{border-collapse:collapse;width:100%}th{background:#D4522A;color:white;padding:8px;border:1px solid #ddd;text-align:center;font-size:12px}</style></head><body><h1>🏆 Classement général</h1><h2>${evName} — ${new Date().toLocaleDateString('fr-CH')}</h2><table><thead><tr><th>#</th><th>Classe</th>${events.map(e=>`<th>${e.icon} ${e.label}</th>`).join('')}<th>Total</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();
+};
+window.printClass = (clsId) => {
+  const evName=document.getElementById('header-event-name')?.textContent||'';
+  const cls=evData.classes[clsId]||{}, className=getClassName(clsId);
+  const students=cls.students||{};
+  const ids=Object.keys(students).sort((a,b)=>(students[a].name||'').localeCompare(students[b].name||''));
+  const indivEvents=allSportEvents().filter(e=>!e.collective&&!e.dual);
+  const rows=ids.map((id,i)=>{
+    const s=students[id];
+    const cells=indivEvents.map(e=>{const v=s[e.key];return`<td style="text-align:center;padding:5px 8px;border:1px solid #ddd">${v!=null?fmtValue(e.type,v):'—'}</td>`;}).join('');
+    return`<tr style="background:${i%2===0?'white':'#f9f9f9'}"><td style="padding:5px 8px;border:1px solid #ddd">${s.name||''}</td>${cells}</tr>`;
+  }).join('');
+  const avgRow=`<tr style="background:#FDF1EC;font-weight:700"><td style="padding:5px 8px;border:1px solid #ddd">Moyenne classe</td>${indivEvents.map(e=>{const a=avg(students,e.key);const ap=a!==null?applyThreshold(e.key,a):null;const seuil=a!==null&&ap!==a?` <span style="font-size:10px;color:#D4522A">(seuil)</span>`:'';return`<td style="text-align:center;padding:5px 8px;border:1px solid #ddd">${ap!==null?fmtValue(e.type,ap)+seuil:'—'}</td>`;}).join('')}</tr>`;
+  const relaisSection=allSportEvents().filter(e=>e.dual).map(e=>{const vG=cls[e.key+'_g'],vF=cls[e.key+'_f'];return`<p><strong>${e.icon} ${e.label} :</strong> 👦 ${vG!=null?fmtValue(e.type,vG):'—'} | 👧 ${vF!=null?fmtValue(e.type,vF):'—'} | Moy: <strong>${cls[e.key]!=null?fmtValue(e.type,cls[e.key]):'—'}</strong></p>`;}).join('');
+  const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>${className}</title><style>body{font-family:Arial,sans-serif;padding:20px;font-size:13px}h1{font-size:20px;margin-bottom:4px}h2{font-size:14px;color:#666;font-weight:normal;margin-bottom:16px}table{border-collapse:collapse;width:100%}th{background:#D4522A;color:white;padding:8px;border:1px solid #ddd;text-align:center;font-size:12px}</style></head><body><h1>📋 Classe ${className}</h1><h2>${evName} — ${ids.length} élèves — ${new Date().toLocaleDateString('fr-CH')}</h2><table><thead><tr><th style="text-align:left">Élève</th>${indivEvents.map(e=>`<th>${e.icon} ${e.label}</th>`).join('')}</tr></thead><tbody>${rows}${avgRow}</tbody></table>${relaisSection?`<div style="margin-top:16px;padding:12px;background:#f5f5f5;border-radius:6px">${relaisSection}</div>`:''}<script>window.onload=()=>window.print()<\/script></body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();
 };
 
 // ── MODALS ─────────────────────────────────
