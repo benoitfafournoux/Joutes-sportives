@@ -251,7 +251,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- SAISIE -->
     <div id="view-saisie" class="view active">
       <div class="section-header">
-        <div class="section-title">Classes</div>
+        <div class="section-title" id="saisie-step-title">Classes</div>
         <button class="btn btn-accent btn-sm" id="btn-add-class" onclick="openModal('modal-class')">+ Classe</button>
       </div>
       <div class="classes-grid" id="classes-grid"></div>
@@ -260,6 +260,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div class="section-header">
           <div class="section-title" id="class-detail-title"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-sm" id="btn-change-class" onclick="changeClass()" style="display:none">← Changer de classe</button>
             <button class="btn btn-sm btn-danger" id="btn-reset-class" onclick="resetClassResults()">🗑️ Effacer les résultats</button>
             <span id="reset-class-feedback" style="font-size:13px;color:var(--green)"></span>
             <button class="btn btn-sm btn-danger" id="btn-del-class" onclick="deleteClass()">Supprimer</button>
@@ -662,6 +663,7 @@ window.openEvent = id => {
   document.getElementById('btn-add-class').style.display = isAdmin ? '' : 'none';
   document.getElementById('btn-del-class').style.display = isAdmin ? '' : 'none';
   document.getElementById('btn-reset-class').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btn-change-class').style.display = isAdmin ? 'none' : '';
 
   showScreen('screen-app');
   // Activer vue saisie
@@ -720,12 +722,20 @@ window.showView = (v, btn) => {
 };
 
 function renderAll() {
+  const isAdmin = role === 'admin';
+  // Restaurer la grille si pas de classe sélectionnée
+  const grid = document.getElementById('classes-grid');
+  if (grid) grid.style.display = '';
   renderClasses();
   if (selectedClass && evData.classes[selectedClass]) {
+    // En mode enseignant, cacher la grille quand une classe est sélectionnée
+    if (!isAdmin && grid) grid.style.display = 'none';
     renderClassDetail();
   } else if (selectedClass && !evData.classes[selectedClass]) {
     selectedClass = null;
     document.getElementById('class-detail').style.display = 'none';
+    const stepTitle = document.getElementById('saisie-step-title');
+    if (stepTitle) stepTitle.textContent = 'Classes';
   }
   if (document.getElementById('view-classement').classList.contains('active')) renderRanking();
 }
@@ -896,27 +906,40 @@ function renderClasses() {
   const classes = getClassOrder();
   const isAdmin = role === 'admin';
 
+  // Mode enseignant : cartes simples et grandes, pas de gestion
+  if (!isAdmin) {
+    grid.innerHTML = classes.map(clsId => {
+      const cls = evData.classes[clsId] || {};
+      const name = cls.name || clsId;
+      const count = Object.keys(cls.students||{}).length;
+      const isSelected = clsId === selectedClass;
+      return `<div class="class-card${isSelected?' selected':''}" onclick="selectClass('${clsId}')" style="cursor:pointer;padding:1.25rem">
+        <div class="class-card-name" style="font-size:18px">${name}</div>
+        <div class="class-card-count">${count} élève${count!==1?'s':''}</div>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // Mode admin : flèches + gestion
   grid.innerHTML = classes.map((clsId, idx) => {
     const cls = evData.classes[clsId] || {};
     const name = cls.name || clsId;
     const count = Object.keys(cls.students||{}).length;
     const canLeft  = idx > 0;
     const canRight = idx < classes.length - 1;
-    const arrows = isAdmin ? `<div class="order-arrows">
+    const arrows = `<div class="order-arrows">
       <button class="arrow-btn" ${canLeft?'':'disabled'} onclick="moveClass(event,'${clsId}',-1)">◀</button>
       <span class="order-label">ordonner</span>
       <button class="arrow-btn" ${canRight?'':'disabled'} onclick="moveClass(event,'${clsId}',1)">▶</button>
-    </div>` : '';
+    </div>`;
     return `<div class="class-card${clsId===selectedClass?' selected':''}">
       ${arrows}
       <div class="class-card-name" onclick="selectClass('${clsId}')">${name}</div>
       <div class="class-card-count" onclick="selectClass('${clsId}')">${count} élève${count!==1?'s':''}</div>
     </div>`;
   }).join('');
-
-  if (isAdmin) {
-    grid.innerHTML += `<div class="add-card" onclick="openModal('modal-class')"><span style="font-size:20px">＋</span> Nouvelle classe</div>`;
-  }
+  grid.innerHTML += `<div class="add-card" onclick="openModal('modal-class')"><span style="font-size:20px">＋</span> Nouvelle classe</div>`;
 }
 
 window.moveClass = (e, clsId, dir) => {
@@ -940,10 +963,28 @@ window.moveClass = (e, clsId, dir) => {
 window.selectClass = clsId => {
   selectedClass = clsId;
   selectedSportKey = null;
+  const isAdmin = role === 'admin';
   document.getElementById('class-detail').style.display = 'block';
   document.getElementById('class-detail-title').textContent = getClassName(clsId);
+  // Titre étape pour enseignant
+  const stepTitle = document.getElementById('saisie-step-title');
+  if (stepTitle) stepTitle.textContent = isAdmin ? 'Classes' : `Ma classe : ${getClassName(clsId)}`;
+  // Masquer la grille des classes en mode enseignant après sélection
+  if (!isAdmin) {
+    document.getElementById('classes-grid').style.display = 'none';
+  }
   renderClasses();
   renderClassDetail();
+};
+
+window.changeClass = () => {
+  selectedClass = null;
+  selectedSportKey = null;
+  document.getElementById('class-detail').style.display = 'none';
+  document.getElementById('classes-grid').style.display = '';
+  const stepTitle = document.getElementById('saisie-step-title');
+  if (stepTitle) stepTitle.textContent = 'Classes';
+  renderClasses();
 };
 
 window.addClassConfirm = () => {
@@ -1041,9 +1082,20 @@ window.deleteStudent = id => {
 };
 
 function renderClassDetail() {
-  renderStudentList();
-  renderEventPicker();
-  if (selectedSportKey) selectSportEvent(selectedSportKey);
+  const isAdmin = role === 'admin';
+  if (!isAdmin) {
+    // Mode enseignant : étapes claires
+    // Étape 1 : classe sélectionnée → montrer épreuves
+    // Étape 2 : épreuve sélectionnée → montrer liste élèves
+    document.getElementById('student-setup').style.display = 'none';
+    renderEventPicker();
+    if (selectedSportKey) selectSportEvent(selectedSportKey);
+  } else {
+    document.getElementById('student-setup').style.display = '';
+    renderStudentList();
+    renderEventPicker();
+    if (selectedSportKey) selectSportEvent(selectedSportKey);
+  }
 }
 
 // ── EVENT PICKER ───────────────────────────
