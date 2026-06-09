@@ -327,9 +327,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <p class="notice" style="margin-top:.75rem">Les épreuves par défaut ne peuvent pas être supprimées.</p>
 
       <div style="margin-top:2rem">
+        <div class="section-title" style="margin-bottom:.5rem;font-size:16px">🎯 Seuils de performance</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem">Si un élève dépasse le seuil dans le mauvais sens, sa valeur est remplacée par le seuil pour le calcul de la moyenne. Le résultat réel reste affiché normalement.</p>
+        <div class="table-wrap" id="thresholds-list"></div>
+      </div>
+
+      <div style="margin-top:2rem">
         <div class="section-title" style="margin-bottom:.75rem;font-size:16px">🧹 Nettoyage des classes</div>
         <div class="table-wrap" style="padding:1rem 1.25rem">
-          <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">Supprime les classes dont le nom est un identifiant technique (cls_178...) sans élèves ni résultats.</p>
+          <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">Supprime les classes dont le nom est un identifiant technique sans élèves ni résultats.</p>
           <button class="btn btn-sm btn-danger" onclick="cleanupBrokenClasses()">Supprimer les classes mal nommées</button>
           <span id="cleanup-feedback" style="font-size:13px;color:var(--green);margin-left:12px"></span>
         </div>
@@ -625,10 +631,23 @@ window.openEvent = id => {
   // Écouter les données de cet événement
   onValue(ref(db, `joutesData/${id}`), snap => {
     if (pauseListener) return;
-    evData = snap.val() || { classes:{}, classOrder:[], customSportEvents:[] };
+    evData = snap.val() || { classes:{}, classOrder:[], customSportEvents:[], thresholds:{} };
     if (!evData.classes) evData.classes = {};
     if (!evData.classOrder) evData.classOrder = [];
     if (!evData.customSportEvents) evData.customSportEvents = [];
+    if (!evData.thresholds) evData.thresholds = {};
+    // Préremplir les champs temporaires pour les seuils
+    Object.keys(DEFAULT_THRESHOLDS).forEach(key => {
+      const t = getThreshold(key);
+      const ev = getSportEvent(key);
+      if (!ev) return;
+      ['max','min'].forEach(bound => {
+        if (t[bound] !== null) {
+          const d = decodeValue(ev.type, t[bound]);
+          _thresholdTemp[`${key}_${bound}`] = { a: String(d.a), b: String(d.b) };
+        }
+      });
+    });
     renderAll();
   });
 };
@@ -654,7 +673,7 @@ window.showView = (v, btn) => {
   document.getElementById('view-'+v).classList.add('active');
   btn.classList.add('active');
   if (v === 'classement') renderRanking();
-  if (v === 'epreuves')   renderSportEventsList();
+  if (v === 'epreuves')   { renderSportEventsList(); renderThresholdsList(); }
 };
 
 function renderAll() {
@@ -721,6 +740,100 @@ function renderSportEventsList() {
         : `<button class="btn btn-sm btn-danger" onclick="deleteSportEvent(event,'${e.key}')">Supprimer</button>`}
     </div>`).join('');
 }
+
+function renderThresholdsList() {
+  const el = document.getElementById('thresholds-list');
+  if (!el) return;
+  const events = allSportEvents().filter(e => !e.collective);
+  el.innerHTML = events.map(e => {
+    const t = getThreshold(e.key);
+    const hasMax = t.max !== null;
+    const hasMin = t.min !== null;
+    // Affichage formaté du seuil
+    const maxDisplay = hasMax ? fmtValue(e.type, t.max) : '—';
+    const minDisplay = hasMin ? fmtValue(e.type, t.min) : '—';
+    const maxDecoded = hasMax ? decodeValue(e.type, t.max) : {a:'',b:''};
+    const minDecoded = hasMin ? decodeValue(e.type, t.min) : {a:'',b:''};
+    const isTwoField = e.type !== 'number';
+    const [lA, lB] = inputLabels(e.type);
+
+    let maxInput = '', minInput = '';
+    if (hasMax || e.lowerBetter) {
+      if (isTwoField) {
+        maxInput = `<div style="display:flex;align-items:center;gap:4px">
+          <input type="text" inputmode="numeric" placeholder="${lA}" value="${maxDecoded.a}"
+            style="width:52px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-weight:600;text-align:center;background:var(--bg)"
+            onchange="saveThresholdAB('${e.key}','max','a',this.value)">
+          <span style="font-weight:700;color:var(--text2)">:</span>
+          <input type="text" inputmode="numeric" placeholder="${lB}" value="${maxDecoded.b}"
+            style="width:52px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-weight:600;text-align:center;background:var(--bg)"
+            onchange="saveThresholdAB('${e.key}','max','b',this.value)">
+          <span style="font-size:11px;color:var(--text3)">${e.unit}</span>
+        </div>`;
+      } else {
+        maxInput = `<div style="display:flex;align-items:center;gap:4px">
+          <input type="text" inputmode="decimal" placeholder="—" value="${maxDecoded.a}"
+            style="width:80px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-weight:600;text-align:center;background:var(--bg)"
+            onchange="saveThresholdSingle('${e.key}','max',this.value)">
+          <span style="font-size:11px;color:var(--text3)">${e.unit}</span>
+        </div>`;
+      }
+    }
+    if (hasMin || !e.lowerBetter) {
+      if (isTwoField) {
+        minInput = `<div style="display:flex;align-items:center;gap:4px">
+          <input type="text" inputmode="numeric" placeholder="${lA}" value="${minDecoded.a}"
+            style="width:52px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-weight:600;text-align:center;background:var(--bg)"
+            onchange="saveThresholdAB('${e.key}','min','a',this.value)">
+          <span style="font-weight:700;color:var(--text2)">:</span>
+          <input type="text" inputmode="numeric" placeholder="${lB}" value="${minDecoded.b}"
+            style="width:52px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-weight:600;text-align:center;background:var(--bg)"
+            onchange="saveThresholdAB('${e.key}','min','b',this.value)">
+          <span style="font-size:11px;color:var(--text3)">${e.unit}</span>
+        </div>`;
+      } else {
+        minInput = `<div style="display:flex;align-items:center;gap:4px">
+          <input type="text" inputmode="decimal" placeholder="—" value="${minDecoded.a}"
+            style="width:80px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-weight:600;text-align:center;background:var(--bg)"
+            onchange="saveThresholdSingle('${e.key}','min',this.value)">
+          <span style="font-size:11px;color:var(--text3)">${e.unit}</span>
+        </div>`;
+      }
+    }
+
+    return `<div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border2);gap:12px;flex-wrap:wrap">
+      <span style="font-size:20px;min-width:28px">${e.icon}</span>
+      <div style="flex:1;min-width:80px">
+        <div style="font-weight:500;font-size:14px">${e.label}</div>
+        <div style="font-size:11px;color:var(--text3)">${e.lowerBetter?'Seuil maximum (pas au-dessus)':'Seuil minimum (pas en-dessous)'}</div>
+      </div>
+      ${e.lowerBetter ? maxInput : minInput}
+    </div>`;
+  }).join('');
+}
+
+// Sauvegarder un seuil à deux champs (min:sec, m:cm...)
+const _thresholdTemp = {};
+window.saveThresholdAB = (key, bound, field, val) => {
+  const tk = `${key}_${bound}`;
+  if (!_thresholdTemp[tk]) _thresholdTemp[tk] = {a:'', b:''};
+  _thresholdTemp[tk][field] = val;
+  const ev = getSportEvent(key);
+  if (!ev) return;
+  const encoded = encodeValue(ev.type, _thresholdTemp[tk].a, _thresholdTemp[tk].b);
+  if (!evData.thresholds) evData.thresholds = {};
+  if (!evData.thresholds[key]) evData.thresholds[key] = { max: null, min: null };
+  evData.thresholds[key][bound] = encoded;
+  saveEvData();
+};
+
+window.saveThresholdSingle = (key, bound, val) => {
+  const v = val === '' ? null : parseFloat(val);
+  if (!evData.thresholds) evData.thresholds = {};
+  if (!evData.thresholds[key]) evData.thresholds[key] = { max: null, min: null };
+  evData.thresholds[key][bound] = v;
+  saveEvData();
+};
 
 // ── CLASSES ────────────────────────────────
 function getClassOrder() {
@@ -1083,10 +1196,42 @@ window.saveCollAB = (key, type, field, val) => {
   saveEvData(); renderEventPicker();
 };
 
+// ── SEUILS ─────────────────────────────────
+// Seuils par défaut (en valeur stockée = secondes ou cm)
+const DEFAULT_THRESHOLDS = {
+  r800:   { max: 420,  min: null }, // 7min = 420s — pas au-dessus
+  sprint: { max: 15,   min: null }, // 15s — pas au-dessus
+  lance:  { max: null, min: 300  }, // 3m = 300cm — pas en-dessous
+  long:   { max: null, min: 150  }, // 1m50 = 150cm — pas en-dessous
+};
+
+function getThresholds() {
+  return evData.thresholds || {};
+}
+
+function getThreshold(key) {
+  const custom = (evData.thresholds || {})[key];
+  if (custom !== undefined) return custom;
+  return DEFAULT_THRESHOLDS[key] || { max: null, min: null };
+}
+
+// Applique le seuil à une valeur brute
+function applyThreshold(key, val) {
+  if (val === null || val === undefined) return null;
+  const t = getThreshold(key);
+  let v = parseFloat(val);
+  if (t.max !== null && v > t.max) v = t.max;
+  if (t.min !== null && v < t.min) v = t.min;
+  return v;
+}
+
 // ── RANKING ────────────────────────────────
 function avg(students, key) {
-  const vals=Object.values(students).map(s=>s[key]).filter(v=>v!==null&&v!==undefined&&!isNaN(parseFloat(v))).map(parseFloat);
-  return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+  const vals = Object.values(students)
+    .map(s => s[key])
+    .filter(v => v !== null && v !== undefined && !isNaN(parseFloat(v)))
+    .map(v => applyThreshold(key, parseFloat(v))); // ← applique le seuil
+  return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
 }
 
 function assignPoints(classStats, eventKey, lowerBetter) {
