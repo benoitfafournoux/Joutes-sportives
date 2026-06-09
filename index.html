@@ -243,7 +243,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="nav-btn active" onclick="showView('saisie',this)">Saisie</button>
       <button class="nav-btn" onclick="showView('classement',this)">Classement</button>
       <button class="nav-btn" id="nav-epreuves" onclick="showView('epreuves',this)">Épreuves</button>
-      <button class="nav-btn" onclick="showView('impression',this)">🖨️ PDF</button>
     </nav>
   </header>
   <main class="main">
@@ -251,7 +250,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- SAISIE -->
     <div id="view-saisie" class="view active">
       <div class="section-header">
-        <div class="section-title" id="saisie-step-title">Classes</div>
+        <div class="section-title">Classes</div>
         <button class="btn btn-accent btn-sm" id="btn-add-class" onclick="openModal('modal-class')">+ Classe</button>
       </div>
       <div class="classes-grid" id="classes-grid"></div>
@@ -259,12 +258,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div id="class-detail" style="display:none">
         <div class="section-header">
           <div class="section-title" id="class-detail-title"></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <button class="btn btn-sm" id="btn-change-class" onclick="changeClass()" style="display:none">← Changer de classe</button>
-            <button class="btn btn-sm btn-danger" id="btn-reset-class" onclick="resetClassResults()">🗑️ Effacer les résultats</button>
-            <span id="reset-class-feedback" style="font-size:13px;color:var(--green)"></span>
-            <button class="btn btn-sm btn-danger" id="btn-del-class" onclick="deleteClass()">Supprimer</button>
-          </div>
+          <button class="btn btn-sm btn-danger" id="btn-del-class" onclick="deleteClass()">Supprimer</button>
         </div>
 
         <!-- Élèves -->
@@ -302,8 +296,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div id="entry-collective" style="display:none">
           <div class="entry-wrap" style="padding:1rem 1.25rem">
             <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:.5rem" id="collective-title"></div>
-            <div style="font-size:13px;color:var(--text2);margin-bottom:1rem" id="collective-sub">Temps unique pour toute la classe</div>
-            <div id="collective-inputs"></div>
+            <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">Temps unique pour toute la classe</div>
+            <div class="entry-inputs" id="collective-inputs"></div>
           </div>
         </div>
         <p class="notice">Sauvegarde automatique. <strong>Courses</strong> : moins = meilleur. <strong>Sauts/Lancers</strong> : plus = meilleur.</p>
@@ -339,43 +333,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
 
       <div style="margin-top:2rem">
-        <div class="section-title" style="margin-bottom:.75rem;font-size:16px">🗑️ Réinitialisation des résultats</div>
-        <div class="table-wrap" style="padding:1rem 1.25rem">
-          <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">Efface <strong>tous les résultats</strong> de toutes les classes de cet événement. Les noms d'élèves sont conservés.</p>
-          <button class="btn btn-sm btn-danger" onclick="resetAllResults()">🗑️ Effacer tous les résultats</button>
-          <span id="reset-all-feedback" style="font-size:13px;color:var(--green);margin-left:12px"></span>
-        </div>
-      </div>
+        <div class="section-title" style="margin-bottom:.75rem;font-size:16px">🧹 Nettoyage des classes</div>
         <div class="table-wrap" style="padding:1rem 1.25rem">
           <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">Supprime les classes dont le nom est un identifiant technique sans élèves ni résultats.</p>
           <button class="btn btn-sm btn-danger" onclick="cleanupBrokenClasses()">Supprimer les classes mal nommées</button>
           <span id="cleanup-feedback" style="font-size:13px;color:var(--green);margin-left:12px"></span>
         </div>
       </div>
-    </div>
-
-    <!-- IMPRESSION -->
-    <div id="view-impression" class="view">
-      <div class="section-title" style="margin-bottom:1.25rem">🖨️ Télécharger en PDF</div>
-
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:2rem">
-        <!-- Classement général -->
-        <div class="table-wrap" style="padding:1.25rem">
-          <div style="font-size:18px;margin-bottom:.5rem">🏆</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:.4rem">Classement général</div>
-          <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">Toutes les classes, points et moyennes par épreuve</div>
-          <button class="btn btn-accent btn-sm" onclick="printRanking()">⬇ Télécharger PDF</button>
-        </div>
-
-        <!-- Résultats par classe -->
-        <div class="table-wrap" style="padding:1.25rem">
-          <div style="font-size:18px;margin-bottom:.5rem">📋</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:.4rem">Résultats par classe</div>
-          <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">Une page par classe avec tous les résultats individuels et la moyenne</div>
-          <div style="display:flex;flex-direction:column;gap:8px" id="print-class-buttons"></div>
-        </div>
-      </div>
-      <p class="notice">Les PDFs s'ouvrent dans un nouvel onglet — utilisez <strong>Fichier → Enregistrer sous PDF</strong> ou <strong>Ctrl+P → Enregistrer en PDF</strong>.</p>
     </div>
 
   </main>
@@ -442,11 +406,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 </div>
 
 <!-- FIREBASE -->
-<!-- Firebase compat (fonctionne sur tous les navigateurs sans module) -->
+<!-- Firebase compat -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
-// Alias pour compatibilité avec le reste du code
 function ref(db, path) { return db.ref(path); }
 function onValue(r, cb) { r.on('value', snap => cb(snap)); }
 function set(r, val) { return r.set(val); }
@@ -469,7 +432,7 @@ const DEFAULT_SPORT_EVENTS = [
   { key:'long',   label:'Longueur', icon:'📏', type:'mcm',     unit:'m:cm',    collective:false, lowerBetter:false, locked:true },
   { key:'lance',  label:'Lancer',   icon:'🏋️', type:'mcm',     unit:'m:cm',    collective:false, lowerBetter:false, locked:true },
   { key:'sprint', label:'Sprint',   icon:'⚡', type:'seccent', unit:'sec:cent',collective:false, lowerBetter:true,  locked:true },
-  { key:'relais', label:'Relais',   icon:'🏁', type:'minsec',  unit:'min:sec', collective:true,  lowerBetter:true, locked:true, dual:true },
+  { key:'relais', label:'Relais',   icon:'🏁', type:'minsec',  unit:'min:sec', collective:true,  lowerBetter:true,  locked:true },
 ];
 
 const fbApp = firebase.initializeApp(firebaseConfig);
@@ -589,7 +552,6 @@ window.switchRole = () => {
     document.getElementById('nav-epreuves').style.display  = isAdmin ? '' : 'none';
     document.getElementById('btn-add-class').style.display = isAdmin ? '' : 'none';
     document.getElementById('btn-del-class').style.display = isAdmin ? '' : 'none';
-    document.getElementById('btn-reset-class').style.display = isAdmin ? '' : 'none';
     renderClasses();
   }
 };
@@ -662,8 +624,6 @@ window.openEvent = id => {
   document.getElementById('nav-epreuves').style.display  = isAdmin ? '' : 'none';
   document.getElementById('btn-add-class').style.display = isAdmin ? '' : 'none';
   document.getElementById('btn-del-class').style.display = isAdmin ? '' : 'none';
-  document.getElementById('btn-reset-class').style.display = isAdmin ? '' : 'none';
-  document.getElementById('btn-change-class').style.display = isAdmin ? 'none' : '';
 
   showScreen('screen-app');
   // Activer vue saisie
@@ -718,24 +678,15 @@ window.showView = (v, btn) => {
   btn.classList.add('active');
   if (v === 'classement') renderRanking();
   if (v === 'epreuves')   { renderSportEventsList(); renderThresholdsList(); }
-  if (v === 'impression') renderImpressionView();
 };
 
 function renderAll() {
-  const isAdmin = role === 'admin';
-  // Restaurer la grille si pas de classe sélectionnée
-  const grid = document.getElementById('classes-grid');
-  if (grid) grid.style.display = '';
   renderClasses();
   if (selectedClass && evData.classes[selectedClass]) {
-    // En mode enseignant, cacher la grille quand une classe est sélectionnée
-    if (!isAdmin && grid) grid.style.display = 'none';
     renderClassDetail();
   } else if (selectedClass && !evData.classes[selectedClass]) {
     selectedClass = null;
     document.getElementById('class-detail').style.display = 'none';
-    const stepTitle = document.getElementById('saisie-step-title');
-    if (stepTitle) stepTitle.textContent = 'Classes';
   }
   if (document.getElementById('view-classement').classList.contains('active')) renderRanking();
 }
@@ -797,7 +748,7 @@ function renderSportEventsList() {
 function renderThresholdsList() {
   const el = document.getElementById('thresholds-list');
   if (!el) return;
-  const events = allSportEvents().filter(e => !e.collective || e.dual);
+  const events = allSportEvents().filter(e => !e.collective);
   el.innerHTML = events.map(e => {
     const t = getThreshold(e.key);
     const hasMax = t.max !== null;
@@ -906,40 +857,27 @@ function renderClasses() {
   const classes = getClassOrder();
   const isAdmin = role === 'admin';
 
-  // Mode enseignant : cartes simples et grandes, pas de gestion
-  if (!isAdmin) {
-    grid.innerHTML = classes.map(clsId => {
-      const cls = evData.classes[clsId] || {};
-      const name = cls.name || clsId;
-      const count = Object.keys(cls.students||{}).length;
-      const isSelected = clsId === selectedClass;
-      return `<div class="class-card${isSelected?' selected':''}" onclick="selectClass('${clsId}')" style="cursor:pointer;padding:1.25rem">
-        <div class="class-card-name" style="font-size:18px">${name}</div>
-        <div class="class-card-count">${count} élève${count!==1?'s':''}</div>
-      </div>`;
-    }).join('');
-    return;
-  }
-
-  // Mode admin : flèches + gestion
   grid.innerHTML = classes.map((clsId, idx) => {
     const cls = evData.classes[clsId] || {};
     const name = cls.name || clsId;
     const count = Object.keys(cls.students||{}).length;
     const canLeft  = idx > 0;
     const canRight = idx < classes.length - 1;
-    const arrows = `<div class="order-arrows">
+    const arrows = isAdmin ? `<div class="order-arrows">
       <button class="arrow-btn" ${canLeft?'':'disabled'} onclick="moveClass(event,'${clsId}',-1)">◀</button>
       <span class="order-label">ordonner</span>
       <button class="arrow-btn" ${canRight?'':'disabled'} onclick="moveClass(event,'${clsId}',1)">▶</button>
-    </div>`;
+    </div>` : '';
     return `<div class="class-card${clsId===selectedClass?' selected':''}">
       ${arrows}
       <div class="class-card-name" onclick="selectClass('${clsId}')">${name}</div>
       <div class="class-card-count" onclick="selectClass('${clsId}')">${count} élève${count!==1?'s':''}</div>
     </div>`;
   }).join('');
-  grid.innerHTML += `<div class="add-card" onclick="openModal('modal-class')"><span style="font-size:20px">＋</span> Nouvelle classe</div>`;
+
+  if (isAdmin) {
+    grid.innerHTML += `<div class="add-card" onclick="openModal('modal-class')"><span style="font-size:20px">＋</span> Nouvelle classe</div>`;
+  }
 }
 
 window.moveClass = (e, clsId, dir) => {
@@ -963,28 +901,10 @@ window.moveClass = (e, clsId, dir) => {
 window.selectClass = clsId => {
   selectedClass = clsId;
   selectedSportKey = null;
-  const isAdmin = role === 'admin';
   document.getElementById('class-detail').style.display = 'block';
   document.getElementById('class-detail-title').textContent = getClassName(clsId);
-  // Titre étape pour enseignant
-  const stepTitle = document.getElementById('saisie-step-title');
-  if (stepTitle) stepTitle.textContent = isAdmin ? 'Classes' : `Ma classe : ${getClassName(clsId)}`;
-  // Masquer la grille des classes en mode enseignant après sélection
-  if (!isAdmin) {
-    document.getElementById('classes-grid').style.display = 'none';
-  }
   renderClasses();
   renderClassDetail();
-};
-
-window.changeClass = () => {
-  selectedClass = null;
-  selectedSportKey = null;
-  document.getElementById('class-detail').style.display = 'none';
-  document.getElementById('classes-grid').style.display = '';
-  const stepTitle = document.getElementById('saisie-step-title');
-  if (stepTitle) stepTitle.textContent = 'Classes';
-  renderClasses();
 };
 
 window.addClassConfirm = () => {
@@ -1082,20 +1002,9 @@ window.deleteStudent = id => {
 };
 
 function renderClassDetail() {
-  const isAdmin = role === 'admin';
-  if (!isAdmin) {
-    // Mode enseignant : étapes claires
-    // Étape 1 : classe sélectionnée → montrer épreuves
-    // Étape 2 : épreuve sélectionnée → montrer liste élèves
-    document.getElementById('student-setup').style.display = 'none';
-    renderEventPicker();
-    if (selectedSportKey) selectSportEvent(selectedSportKey);
-  } else {
-    document.getElementById('student-setup').style.display = '';
-    renderStudentList();
-    renderEventPicker();
-    if (selectedSportKey) selectSportEvent(selectedSportKey);
-  }
+  renderStudentList();
+  renderEventPicker();
+  if (selectedSportKey) selectSportEvent(selectedSportKey);
 }
 
 // ── EVENT PICKER ───────────────────────────
@@ -1106,15 +1015,8 @@ function renderEventPicker() {
   const isAdmin = role === 'admin';
   picker.innerHTML = allSportEvents().map(e => {
     let filled=0, total=1;
-    if (e.dual) {
-      const valG = cls[e.key+'_g'], valF = cls[e.key+'_f'];
-      filled = (valG!==null&&valG!==undefined?1:0) + (valF!==null&&valF!==undefined?1:0);
-      total = 2;
-    } else if (e.collective) {
-      filled = (cls[e.key]!==null&&cls[e.key]!==undefined)?1:0;
-    } else {
-      total=students.length; filled=students.filter(s=>s[e.key]!==null&&s[e.key]!==undefined).length;
-    }
+    if (e.collective) { filled = (cls[e.key]!==null&&cls[e.key]!==undefined)?1:0; }
+    else { total=students.length; filled=students.filter(s=>s[e.key]!==null&&s[e.key]!==undefined).length; }
     const isActive = selectedSportKey === e.key;
     const progress = total>0 ? `${filled}/${total} · ` : '';
     const delBtn = (!e.locked && isAdmin) ? `<button class="event-pill-del" onclick="deleteSportEvent(event,'${e.key}')" title="Supprimer">✕</button>` : '';
@@ -1259,71 +1161,23 @@ function refreshProgress(key) {
 // ── COLLECTIVE ENTRY ───────────────────────
 function renderCollectiveEntry(ev) {
   const cls = evData.classes[selectedClass]||{};
-  document.getElementById('collective-title').textContent = `${ev.icon} ${ev.label} — résultat collectif`;
-
-  if (ev.dual) {
-    // Relais : deux temps séparés garçons + filles
-    const valG = cls[ev.key+'_g'], valF = cls[ev.key+'_f'];
-    const hasDoneG = valG !== null && valG !== undefined;
-    const hasDoneF = valF !== null && valF !== undefined;
-    const dG = decodeValue(ev.type, valG);
-    const dF = decodeValue(ev.type, valF);
-    const [lA, lB] = inputLabels(ev.type);
-    const avgVal = (hasDoneG && hasDoneF) ? (valG + valF) / 2 : (hasDoneG ? valG : (hasDoneF ? valF : null));
-    const avgDisplay = avgVal !== null ? `Moyenne : <strong>${fmtValue(ev.type, avgVal)}</strong>` : '';
-
-    document.getElementById('collective-sub').textContent = 'Un temps pour les garçons, un temps pour les filles — moyenne utilisée pour le classement';
-    document.getElementById('collective-inputs').innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:1.25rem">
-        <div>
-          <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">👦 Garçons</div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <input class="ei${hasDoneG?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hasDoneG&&dG.a!==''?dG.a:''}"
-              id="coll_g_a" onfocus="this.select()" onchange="saveDualAB('${ev.key}','g','a',this.value)">
-            <span class="ei-sep">:</span>
-            <input class="ei${hasDoneG?' filled':''}" type="text" inputmode="numeric" placeholder="${lB}" value="${hasDoneG&&dG.b!==''?dG.b:''}"
-              id="coll_g_b" onfocus="this.select()" onchange="saveDualAB('${ev.key}','g','b',this.value)">
-            <span class="ei-label">${ev.unit}</span>
-            <span style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDoneG?'✓':''}</span>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">👧 Filles</div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <input class="ei${hasDoneF?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hasDoneF&&dF.a!==''?dF.a:''}"
-              id="coll_f_a" onfocus="this.select()" onchange="saveDualAB('${ev.key}','f','a',this.value)">
-            <span class="ei-sep">:</span>
-            <input class="ei${hasDoneF?' filled':''}" type="text" inputmode="numeric" placeholder="${lB}" value="${hasDoneF&&dF.b!==''?dF.b:''}"
-              id="coll_f_b" onfocus="this.select()" onchange="saveDualAB('${ev.key}','f','b',this.value)">
-            <span class="ei-label">${ev.unit}</span>
-            <span style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDoneF?'✓':''}</span>
-          </div>
-        </div>
-        <div style="font-size:14px;color:var(--text2);padding-top:.5rem;border-top:1px solid var(--border2)">${avgDisplay}</div>
-      </div>`;
-    return;
-  }
-
-  // Épreuve collective simple
   const val = cls[ev.key], hasDone=val!==null&&val!==undefined;
   const d = decodeValue(ev.type, val);
-  document.getElementById('collective-sub').textContent = 'Temps unique pour toute la classe';
+  document.getElementById('collective-title').textContent = `${ev.icon} ${ev.label} — résultat collectif`;
   let html = '';
   if (ev.type==='number') {
-    html=`<div class="entry-inputs"><input class="ei${hasDone?' filled':''}" type="text" inputmode="decimal" placeholder="—" value="${hasDone?d.a:''}"
+    html=`<input class="ei${hasDone?' filled':''}" type="text" inputmode="decimal" placeholder="—" value="${hasDone?d.a:''}"
       onfocus="this.select()" onchange="saveCollective('${ev.key}','${ev.type}',this.value,'')">
-      <span class="ei-label">${ev.unit}</span></div>`;
+      <span class="ei-label">${ev.unit}</span>`;
   } else {
     const [lA,lB]=inputLabels(ev.type);
-    html=`<div class="entry-inputs">
-      <input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hasDone&&d.a!==''?d.a:''}"
+    html=`<input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hasDone&&d.a!==''?d.a:''}"
         id="coll_a" onfocus="this.select()" onchange="saveCollAB('${ev.key}','${ev.type}','a',this.value)">
       <span class="ei-sep">:</span>
       <input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric" placeholder="${lB}" value="${hasDone&&d.b!==''?d.b:''}"
         id="coll_b" onfocus="this.select()" onchange="saveCollAB('${ev.key}','${ev.type}','b',this.value)">
       <span class="ei-label">${ev.unit}</span>
-      <span id="coll-total" style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDone?'= '+fmtValue(ev.type,val):''}</span>
-    </div>`;
+      <span id="coll-total" style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDone?'= '+fmtValue(ev.type,val):''}</span>`;
   }
   document.getElementById('collective-inputs').innerHTML = html;
 }
@@ -1346,50 +1200,13 @@ window.saveCollAB = (key, type, field, val) => {
   saveEvData(); renderEventPicker();
 };
 
-// Relais dual : garçons (g) et filles (f)
-window.saveDualAB = (key, gender, field, val) => {
-  if (!selectedClass) return;
-  const cls = evData.classes[selectedClass];
-  const tA = `_dual_${key}_${gender}_a`, tB = `_dual_${key}_${gender}_b`;
-  if (field==='a') cls[tA] = val;
-  if (field==='b') cls[tB] = val;
-  const ev = getSportEvent(key);
-  const encoded = encodeValue(ev.type, cls[tA]!==undefined?cls[tA]:'', cls[tB]!==undefined?cls[tB]:'');
-  cls[key+'_'+gender] = encoded;
-  // Recalculer la moyenne garçons/filles
-  const valG = cls[key+'_g'], valF = cls[key+'_f'];
-  const hasDoneG = valG !== null && valG !== undefined;
-  const hasDoneF = valF !== null && valF !== undefined;
-  if (hasDoneG && hasDoneF) cls[key] = (valG + valF) / 2;
-  else if (hasDoneG) cls[key] = valG;
-  else if (hasDoneF) cls[key] = valF;
-  else cls[key] = null;
-  // Mettre à jour l'affichage de la moyenne
-  const avgEl = document.querySelector('#collective-inputs [style*="border-top"]');
-  if (avgEl && cls[key] !== null) {
-    avgEl.innerHTML = `Moyenne : <strong>${fmtValue(ev.type, cls[key])}</strong>`;
-  }
-  // Mettre à jour le ✓
-  ['g','f'].forEach(g => {
-    const v = cls[key+'_'+g];
-    const hasDone = v !== null && v !== undefined;
-    [`coll_${g}_a`, `coll_${g}_b`].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.toggle('filled', hasDone);
-    });
-  });
-  saveEvData();
-  renderEventPicker();
-};
-
 // ── SEUILS ─────────────────────────────────
 // Seuils par défaut (en valeur stockée = secondes ou cm)
 const DEFAULT_THRESHOLDS = {
-  r800:   { max: 420,  min: null }, // 7min = 420s
-  sprint: { max: 15,   min: null }, // 15s
-  lance:  { max: null, min: 300  }, // 3m = 300cm
-  long:   { max: null, min: 150  }, // 1m50 = 150cm
-  relais: { max: null, min: null }, // à définir par l'admin
+  r800:   { max: 420,  min: null }, // 7min = 420s — pas au-dessus
+  sprint: { max: 15,   min: null }, // 15s — pas au-dessus
+  lance:  { max: null, min: 300  }, // 3m = 300cm — pas en-dessous
+  long:   { max: null, min: 150  }, // 1m50 = 150cm — pas en-dessous
 };
 
 function getThresholds() {
@@ -1422,22 +1239,11 @@ function avg(students, key) {
 }
 
 function assignPoints(classStats, eventKey, lowerBetter) {
-  const withData = classStats.filter(cs => cs.avgs[eventKey] !== null);
+  const withData = classStats.filter(cs=>cs.avgs[eventKey]!==null);
   if (!withData.length) return;
-  const sorted = [...withData].sort((a,b) => lowerBetter
-    ? a.avgs[eventKey] - b.avgs[eventKey]
-    : b.avgs[eventKey] - a.avgs[eventKey]);
+  const sorted = [...withData].sort((a,b)=>lowerBetter?a.avgs[eventKey]-b.avgs[eventKey]:b.avgs[eventKey]-a.avgs[eventKey]);
   const n = sorted.length;
-  let i = 0;
-  while (i < n) {
-    // Trouver toutes les classes avec la même valeur (ex-æquo)
-    let j = i;
-    while (j < n && sorted[j].avgs[eventKey] === sorted[i].avgs[eventKey]) j++;
-    // Points du meilleur rang de ce groupe (ex: si 2 ex-æquo en position 3 et 4 → tous reçoivent n-2 = rang 3)
-    const pts = n - i;
-    for (let k = i; k < j; k++) sorted[k].pts[eventKey] = pts;
-    i = j;
-  }
+  sorted.forEach((cs,i)=>{ cs.pts[eventKey]=n-i; }); // 1er=N, dernier=1
 }
 
 function renderRanking() {
@@ -1455,27 +1261,8 @@ function renderRanking() {
     const students=evData.classes[c]?.students||{};
     const avgs={};
     events.forEach(e=>{
-      if (e.dual) {
-        // Relais : moyenne garçons + filles avec seuil
-        const valG = evData.classes[c]?.[e.key+'_g'];
-        const valF = evData.classes[c]?.[e.key+'_f'];
-        const hasDoneG = valG!==null&&valG!==undefined&&!isNaN(parseFloat(valG));
-        const hasDoneF = valF!==null&&valF!==undefined&&!isNaN(parseFloat(valF));
-        if (hasDoneG && hasDoneF) {
-          avgs[e.key] = (applyThreshold(e.key, parseFloat(valG)) + applyThreshold(e.key, parseFloat(valF))) / 2;
-        } else if (hasDoneG) {
-          avgs[e.key] = applyThreshold(e.key, parseFloat(valG));
-        } else if (hasDoneF) {
-          avgs[e.key] = applyThreshold(e.key, parseFloat(valF));
-        } else {
-          avgs[e.key] = null;
-        }
-      } else if (e.collective) {
-        const rv=evData.classes[c]?.[e.key];
-        avgs[e.key]=(rv!==null&&rv!==undefined&&!isNaN(parseFloat(rv)))?applyThreshold(e.key,parseFloat(rv)):null;
-      } else {
-        avgs[e.key]=avg(students,e.key);
-      }
+      if (e.collective) { const rv=evData.classes[c]?.[e.key]; avgs[e.key]=(rv!==null&&rv!==undefined&&!isNaN(parseFloat(rv)))?parseFloat(rv):null; }
+      else avgs[e.key]=avg(students,e.key);
     });
     return {cls:c,avgs,pts:{},total:0};
   });
@@ -1506,49 +1293,6 @@ function renderRanking() {
   }).join('');
 }
 
-// Clés de résultats à effacer (toutes les épreuves)
-function getResultKeys() {
-  return allSportEvents().flatMap(e => e.dual
-    ? [e.key, e.key+'_g', e.key+'_f']
-    : [e.key]
-  );
-}
-
-window.resetClassResults = () => {
-  if (!selectedClass) return;
-  const name = getClassName(selectedClass);
-  if (!confirm(`Effacer tous les résultats de la classe ${name} ?\nLes noms d'élèves seront conservés.`)) return;
-  const cls = evData.classes[selectedClass];
-  const keys = getResultKeys();
-  // Effacer résultats collectifs
-  keys.forEach(k => { if (cls[k] !== undefined) delete cls[k]; });
-  // Effacer résultats individuels
-  Object.values(cls.students||{}).forEach(s => {
-    keys.forEach(k => { if (s[k] !== undefined) delete s[k]; });
-  });
-  saveEvData();
-  renderClassDetail();
-  if (selectedSportKey) selectSportEvent(selectedSportKey);
-  const fb = document.getElementById('reset-class-feedback');
-  if (fb) { fb.textContent = 'Résultats effacés !'; setTimeout(()=>{fb.textContent='';},3000); }
-};
-
-window.resetAllResults = () => {
-  if (!confirm(`Effacer TOUS les résultats de toutes les classes ?\nLes noms d'élèves seront conservés.`)) return;
-  const keys = getResultKeys();
-  Object.values(evData.classes||{}).forEach(cls => {
-    keys.forEach(k => { if (cls[k] !== undefined) delete cls[k]; });
-    Object.values(cls.students||{}).forEach(s => {
-      keys.forEach(k => { if (s[k] !== undefined) delete s[k]; });
-    });
-  });
-  saveEvData();
-  if (selectedClass) renderClassDetail();
-  if (selectedSportKey) selectSportEvent(selectedSportKey);
-  const fb = document.getElementById('reset-all-feedback');
-  if (fb) { fb.textContent = 'Tous les résultats ont été effacés !'; setTimeout(()=>{fb.textContent='';},3000); }
-};
-
 window.cleanupBrokenClasses = () => {
   const classes = evData.classes || {};
   let removed = 0;
@@ -1574,176 +1318,6 @@ window.cleanupBrokenClasses = () => {
   }
 };
 
-// ── IMPRESSION ─────────────────────────────
-function renderImpressionView() {
-  const classes = getClassOrder();
-  const btns = document.getElementById('print-class-buttons');
-  if (!btns) return;
-  if (classes.length === 0) {
-    btns.innerHTML = `<div style="font-size:13px;color:var(--text2)">Aucune classe disponible.</div>`;
-    return;
-  }
-  btns.innerHTML = classes.map(clsId =>
-    `<button class="btn btn-sm" style="text-align:left" onclick="printClass('${clsId}')">
-      ⬇ ${getClassName(clsId)}
-    </button>`
-  ).join('');
-}
-
-window.printRanking = () => {
-  const evName = document.getElementById('header-event-name')?.textContent || 'Joutes Sportives';
-  const events = allSportEvents();
-  const classes = getClassOrder();
-
-  // Calculer les stats
-  const classStats = classes.map(c => {
-    const students = evData.classes[c]?.students || {};
-    const avgs = {};
-    events.forEach(e => {
-      if (e.dual) {
-        const vG = evData.classes[c]?.[e.key+'_g'], vF = evData.classes[c]?.[e.key+'_f'];
-        const hG = vG!==null&&vG!==undefined, hF = vF!==null&&vF!==undefined;
-        if (hG&&hF) avgs[e.key]=(applyThreshold(e.key,parseFloat(vG))+applyThreshold(e.key,parseFloat(vF)))/2;
-        else if (hG) avgs[e.key]=applyThreshold(e.key,parseFloat(vG));
-        else if (hF) avgs[e.key]=applyThreshold(e.key,parseFloat(vF));
-        else avgs[e.key]=null;
-      } else if (e.collective) {
-        const rv=evData.classes[c]?.[e.key];
-        avgs[e.key]=(rv!==null&&rv!==undefined)?applyThreshold(e.key,parseFloat(rv)):null;
-      } else {
-        avgs[e.key]=avg(evData.classes[c]?.students||{},e.key);
-      }
-    });
-    return {cls:c,name:getClassName(c),avgs,pts:{},total:0};
-  });
-  events.forEach(e=>assignPoints(classStats,e.key,e.lowerBetter));
-  classStats.forEach(cs=>{cs.total=Object.values(cs.pts).reduce((a,b)=>a+b,0);});
-  classStats.sort((a,b)=>b.total-a.total);
-
-  const medals = ['🥇','🥈','🥉'];
-  let rank = 0;
-  const rows = classStats.map(cs => {
-    const hasData = cs.total > 0;
-    if (hasData) rank++;
-    const medal = rank<=3&&hasData ? medals[rank-1] : (hasData ? rank : '—');
-    const cells = events.map(e => {
-      const p = cs.pts[e.key];
-      const v = cs.avgs[e.key];
-      const disp = v!==null&&v!==undefined ? fmtValue(e.type,v) : '—';
-      return `<td style="text-align:center;padding:6px 8px;border:1px solid #ddd">
-        ${p!==undefined?`<strong>${p}pts</strong><br><span style="font-size:11px;color:#666">${disp}</span>`:'—'}
-      </td>`;
-    }).join('');
-    return `<tr style="background:${rank===1?'#FFF9C4':rank===2?'#F5F5F5':rank===3?'#FFF0E0':'white'}">
-      <td style="padding:6px 8px;border:1px solid #ddd;text-align:center">${medal}</td>
-      <td style="padding:6px 8px;border:1px solid #ddd;font-weight:700">${cs.name}</td>
-      ${cells}
-      <td style="padding:6px 8px;border:1px solid #ddd;text-align:center;font-weight:700;color:#D4522A">${cs.total}</td>
-    </tr>`;
-  }).join('');
-
-  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-  <title>Classement — ${evName}</title>
-  <style>
-    body{font-family:Arial,sans-serif;padding:20px;font-size:13px;}
-    h1{font-size:20px;margin-bottom:4px;}
-    h2{font-size:14px;color:#666;font-weight:normal;margin-bottom:16px;}
-    table{border-collapse:collapse;width:100%;}
-    th{background:#D4522A;color:white;padding:8px;border:1px solid #ddd;text-align:center;font-size:12px;}
-    @media print{body{padding:10px}}
-  </style></head><body>
-  <h1>🏆 Classement général</h1>
-  <h2>${evName} — Imprimé le ${new Date().toLocaleDateString('fr-CH')}</h2>
-  <table>
-    <thead><tr>
-      <th>#</th><th>Classe</th>
-      ${events.map(e=>`<th>${e.icon} ${e.label}</th>`).join('')}
-      <th>Total</th>
-    </tr></thead>
-    <tbody>${rows}</tbody>
-  </table>
-  <p style="margin-top:16px;font-size:11px;color:#999">Points : 1er = N pts → dernier = 1 pt. Seuils appliqués sur les moyennes.</p>
-  <script>window.onload=()=>window.print()<\/script>
-  </body></html>`;
-
-  const w = window.open('', '_blank');
-  w.document.write(html);
-  w.document.close();
-};
-
-window.printClass = (clsId) => {
-  const evName = document.getElementById('header-event-name')?.textContent || '';
-  const cls = evData.classes[clsId] || {};
-  const className = getClassName(clsId);
-  const students = cls.students || {};
-  const ids = Object.keys(students).sort((a,b)=>(students[a].name||'').localeCompare(students[b].name||''));
-  const events = allSportEvents().filter(e => !e.collective || e.dual);
-  const collectiveEvents = allSportEvents().filter(e => e.collective && !e.dual);
-
-  // Lignes élèves
-  const rows = ids.map((id,i) => {
-    const s = students[id];
-    const cells = events.map(e => {
-      if (e.collective||e.dual) return '';
-      const v = s[e.key];
-      return `<td style="text-align:center;padding:5px 8px;border:1px solid #ddd">${v!==null&&v!==undefined?fmtValue(e.type,v):'—'}</td>`;
-    }).join('');
-    return `<tr style="background:${i%2===0?'white':'#f9f9f9'}">
-      <td style="padding:5px 8px;border:1px solid #ddd">${s.name||''}</td>
-      ${cells}
-    </tr>`;
-  }).join('');
-
-  // Moyennes
-  const indivEvents = allSportEvents().filter(e=>!e.collective&&!e.dual);
-  const avgRow = `<tr style="background:#FDF1EC;font-weight:700">
-    <td style="padding:5px 8px;border:1px solid #ddd">Moyenne classe</td>
-    ${indivEvents.map(e=>{
-      const a = avg(students, e.key);
-      const applied = a!==null ? applyThreshold(e.key,a) : null;
-      const seuil = a!==null && applied!==a ? ` <span style="font-size:10px;color:#D4522A">(seuil)</span>` : '';
-      return `<td style="text-align:center;padding:5px 8px;border:1px solid #ddd">${applied!==null?fmtValue(e.type,applied)+''+seuil:'—'}</td>`;
-    }).join('')}
-  </tr>`;
-
-  // Relais
-  const relaisSection = allSportEvents().filter(e=>e.dual).map(e=>{
-    const vG=cls[e.key+'_g'], vF=cls[e.key+'_f'];
-    return `<p><strong>${e.icon} ${e.label} :</strong> 
-      👦 Garçons : ${vG!==null&&vG!==undefined?fmtValue(e.type,vG):'—'} &nbsp;|&nbsp; 
-      👧 Filles : ${vF!==null&&vF!==undefined?fmtValue(e.type,vF):'—'} &nbsp;|&nbsp;
-      Moyenne : <strong>${cls[e.key]!==null&&cls[e.key]!==undefined?fmtValue(e.type,cls[e.key]):'—'}</strong>
-    </p>`;
-  }).join('');
-
-  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-  <title>${className} — ${evName}</title>
-  <style>
-    body{font-family:Arial,sans-serif;padding:20px;font-size:13px;}
-    h1{font-size:20px;margin-bottom:4px;}
-    h2{font-size:14px;color:#666;font-weight:normal;margin-bottom:16px;}
-    table{border-collapse:collapse;width:100%;}
-    th{background:#D4522A;color:white;padding:8px;border:1px solid #ddd;text-align:center;font-size:12px;}
-    @media print{body{padding:10px}}
-  </style></head><body>
-  <h1>📋 Classe ${className}</h1>
-  <h2>${evName} — ${ids.length} élèves — Imprimé le ${new Date().toLocaleDateString('fr-CH')}</h2>
-  <table>
-    <thead><tr>
-      <th style="text-align:left">Élève</th>
-      ${indivEvents.map(e=>`<th>${e.icon} ${e.label}<br><span style="font-size:10px;font-weight:normal">${e.unit}</span></th>`).join('')}
-    </tr></thead>
-    <tbody>${rows}${avgRow}</tbody>
-  </table>
-  ${relaisSection ? `<div style="margin-top:16px;padding:12px;background:#f5f5f5;border-radius:6px">${relaisSection}</div>` : ''}
-  <script>window.onload=()=>window.print()<\/script>
-  </body></html>`;
-
-  const w = window.open('', '_blank');
-  w.document.write(html);
-  w.document.close();
-};
-
 // ── MODALS ─────────────────────────────────
 window.openModal  = id => document.getElementById(id).style.display='flex';
 window.closeModal = id => document.getElementById(id).style.display='none';
@@ -1756,7 +1330,6 @@ if (session?.role) {
 } else {
   showScreen('screen-login');
 }
-</script>
 </script>
 </body>
 </html>
