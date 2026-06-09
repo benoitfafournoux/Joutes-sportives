@@ -1439,13 +1439,13 @@ window.saveDualAB = (key, gender, field, val) => {
 
 // ── SEUILS UI ──────────────────────────────
 window.saveThresholdAB = (key, bound, field, val) => {
-  if (!_thresholdTemp) window._thresholdTemp={};
+  if (!_thresholdTemp) _thresholdTemp={};
   const tk=`${key}_${bound}`;
-  if (!window._thresholdTemp[tk]) window._thresholdTemp[tk]={a:'',b:''};
-  window._thresholdTemp[tk][field]=val;
+  if (!_thresholdTemp[tk]) _thresholdTemp[tk]={a:'',b:''};
+  _thresholdTemp[tk][field]=val;
   const ev=getSportEvent(key);
   if (!ev) return;
-  const encoded=encodeValue(ev.type,window._thresholdTemp[tk].a,window._thresholdTemp[tk].b);
+  const encoded=encodeValue(ev.type,_thresholdTemp[tk].a,_thresholdTemp[tk].b);
   if (!evData.thresholds) evData.thresholds={};
   if (!evData.thresholds[key]) evData.thresholds[key]={max:null,min:null};
   evData.thresholds[key][bound]=encoded;
@@ -1457,7 +1457,6 @@ window.saveThresholdSingle = (key, bound, val) => {
   evData.thresholds[key][bound] = val===''?null:parseFloat(val);
   saveEvData();
 };
-const _thresholdTemp={};
 
 // ── RESET RÉSULTATS ────────────────────────
 function getResultKeys() {
