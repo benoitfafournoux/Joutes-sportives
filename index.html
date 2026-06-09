@@ -258,7 +258,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div id="class-detail" style="display:none">
         <div class="section-header">
           <div class="section-title" id="class-detail-title"></div>
-          <button class="btn btn-sm btn-danger" id="btn-del-class" onclick="deleteClass()">Supprimer</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-sm btn-danger" id="btn-reset-class" onclick="resetClassResults()">🗑️ Effacer les résultats</button>
+            <span id="reset-class-feedback" style="font-size:13px;color:var(--green)"></span>
+            <button class="btn btn-sm btn-danger" id="btn-del-class" onclick="deleteClass()">Supprimer</button>
+          </div>
         </div>
 
         <!-- Élèves -->
@@ -333,7 +337,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
 
       <div style="margin-top:2rem">
-        <div class="section-title" style="margin-bottom:.75rem;font-size:16px">🧹 Nettoyage des classes</div>
+        <div class="section-title" style="margin-bottom:.75rem;font-size:16px">🗑️ Réinitialisation des résultats</div>
+        <div class="table-wrap" style="padding:1rem 1.25rem">
+          <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">Efface <strong>tous les résultats</strong> de toutes les classes de cet événement. Les noms d'élèves sont conservés.</p>
+          <button class="btn btn-sm btn-danger" onclick="resetAllResults()">🗑️ Effacer tous les résultats</button>
+          <span id="reset-all-feedback" style="font-size:13px;color:var(--green);margin-left:12px"></span>
+        </div>
+      </div>
         <div class="table-wrap" style="padding:1rem 1.25rem">
           <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">Supprime les classes dont le nom est un identifiant technique sans élèves ni résultats.</p>
           <button class="btn btn-sm btn-danger" onclick="cleanupBrokenClasses()">Supprimer les classes mal nommées</button>
@@ -548,6 +558,7 @@ window.switchRole = () => {
     document.getElementById('nav-epreuves').style.display  = isAdmin ? '' : 'none';
     document.getElementById('btn-add-class').style.display = isAdmin ? '' : 'none';
     document.getElementById('btn-del-class').style.display = isAdmin ? '' : 'none';
+    document.getElementById('btn-reset-class').style.display = isAdmin ? '' : 'none';
     renderClasses();
   }
 };
@@ -620,6 +631,7 @@ window.openEvent = id => {
   document.getElementById('nav-epreuves').style.display  = isAdmin ? '' : 'none';
   document.getElementById('btn-add-class').style.display = isAdmin ? '' : 'none';
   document.getElementById('btn-del-class').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btn-reset-class').style.display = isAdmin ? '' : 'none';
 
   showScreen('screen-app');
   // Activer vue saisie
@@ -1327,11 +1339,22 @@ function avg(students, key) {
 }
 
 function assignPoints(classStats, eventKey, lowerBetter) {
-  const withData = classStats.filter(cs=>cs.avgs[eventKey]!==null);
+  const withData = classStats.filter(cs => cs.avgs[eventKey] !== null);
   if (!withData.length) return;
-  const sorted = [...withData].sort((a,b)=>lowerBetter?a.avgs[eventKey]-b.avgs[eventKey]:b.avgs[eventKey]-a.avgs[eventKey]);
+  const sorted = [...withData].sort((a,b) => lowerBetter
+    ? a.avgs[eventKey] - b.avgs[eventKey]
+    : b.avgs[eventKey] - a.avgs[eventKey]);
   const n = sorted.length;
-  sorted.forEach((cs,i)=>{ cs.pts[eventKey]=n-i; }); // 1er=N, dernier=1
+  let i = 0;
+  while (i < n) {
+    // Trouver toutes les classes avec la même valeur (ex-æquo)
+    let j = i;
+    while (j < n && sorted[j].avgs[eventKey] === sorted[i].avgs[eventKey]) j++;
+    // Points du meilleur rang de ce groupe (ex: si 2 ex-æquo en position 3 et 4 → tous reçoivent n-2 = rang 3)
+    const pts = n - i;
+    for (let k = i; k < j; k++) sorted[k].pts[eventKey] = pts;
+    i = j;
+  }
 }
 
 function renderRanking() {
@@ -1400,7 +1423,48 @@ function renderRanking() {
   }).join('');
 }
 
-window.cleanupBrokenClasses = () => {
+// Clés de résultats à effacer (toutes les épreuves)
+function getResultKeys() {
+  return allSportEvents().flatMap(e => e.dual
+    ? [e.key, e.key+'_g', e.key+'_f']
+    : [e.key]
+  );
+}
+
+window.resetClassResults = () => {
+  if (!selectedClass) return;
+  const name = getClassName(selectedClass);
+  if (!confirm(`Effacer tous les résultats de la classe ${name} ?\nLes noms d'élèves seront conservés.`)) return;
+  const cls = evData.classes[selectedClass];
+  const keys = getResultKeys();
+  // Effacer résultats collectifs
+  keys.forEach(k => { if (cls[k] !== undefined) delete cls[k]; });
+  // Effacer résultats individuels
+  Object.values(cls.students||{}).forEach(s => {
+    keys.forEach(k => { if (s[k] !== undefined) delete s[k]; });
+  });
+  saveEvData();
+  renderClassDetail();
+  if (selectedSportKey) selectSportEvent(selectedSportKey);
+  const fb = document.getElementById('reset-class-feedback');
+  if (fb) { fb.textContent = 'Résultats effacés !'; setTimeout(()=>{fb.textContent='';},3000); }
+};
+
+window.resetAllResults = () => {
+  if (!confirm(`Effacer TOUS les résultats de toutes les classes ?\nLes noms d'élèves seront conservés.`)) return;
+  const keys = getResultKeys();
+  Object.values(evData.classes||{}).forEach(cls => {
+    keys.forEach(k => { if (cls[k] !== undefined) delete cls[k]; });
+    Object.values(cls.students||{}).forEach(s => {
+      keys.forEach(k => { if (s[k] !== undefined) delete s[k]; });
+    });
+  });
+  saveEvData();
+  if (selectedClass) renderClassDetail();
+  if (selectedSportKey) selectSportEvent(selectedSportKey);
+  const fb = document.getElementById('reset-all-feedback');
+  if (fb) { fb.textContent = 'Tous les résultats ont été effacés !'; setTimeout(()=>{fb.textContent='';},3000); }
+};
   const classes = evData.classes || {};
   let removed = 0;
   Object.keys(classes).forEach(id => {
