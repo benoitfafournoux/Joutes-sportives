@@ -418,7 +418,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAtb4_cX9yeB5eAJa_FzIvGi6aIS5iX_UU",
@@ -1465,6 +1465,8 @@ window.resetAllResults = () => {
   const fb = document.getElementById('reset-all-feedback');
   if (fb) { fb.textContent = 'Tous les résultats ont été effacés !'; setTimeout(()=>{fb.textContent='';},3000); }
 };
+
+window.cleanupBrokenClasses = () => {
   const classes = evData.classes || {};
   let removed = 0;
   Object.keys(classes).forEach(id => {
@@ -1501,6 +1503,42 @@ if (session?.role) {
 } else {
   showScreen('screen-login');
 }
+
+// ── EXPOSER TOUTES LES FONCTIONS AU HTML ───
+// Nécessaire car type="module" isole le scope en Firefox
+window.checkPwd = checkPwd;
+window.toggleLoginMode = toggleLoginMode;
+window.logout = logout;
+window.switchRole = switchRole;
+window.goHome = goHome;
+window.showView = showView;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.openEvent = openEvent;
+window.createJoutesEvent = createJoutesEvent;
+window.deleteJoutesEvent = deleteJoutesEvent;
+window.selectClass = selectClass;
+window.addClassConfirm = addClassConfirm;
+window.deleteClass = deleteClass;
+window.moveClass = moveClass;
+window.resetClassResults = resetClassResults;
+window.resetAllResults = resetAllResults;
+window.cleanupBrokenClasses = cleanupBrokenClasses;
+window.importStudents = importStudents;
+window.addStudent = addStudent;
+window.deleteStudent = deleteStudent;
+window.selectSportEvent = selectSportEvent;
+window.addSportEvent = addSportEvent;
+window.deleteSportEvent = deleteSportEvent;
+window.setSEType = setSEType;
+window.setSEBetter = setSEBetter;
+window.saveVal = saveVal;
+window.saveValAB = saveValAB;
+window.saveCollective = saveCollective;
+window.saveCollAB = saveCollAB;
+window.saveDualAB = saveDualAB;
+window.saveThresholdAB = saveThresholdAB;
+window.saveThresholdSingle = saveThresholdSingle;
 </script>
 </body>
 </html>
