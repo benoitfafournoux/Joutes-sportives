@@ -296,8 +296,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div id="entry-collective" style="display:none">
           <div class="entry-wrap" style="padding:1rem 1.25rem">
             <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:.5rem" id="collective-title"></div>
-            <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">Temps unique pour toute la classe</div>
-            <div class="entry-inputs" id="collective-inputs"></div>
+            <div style="font-size:13px;color:var(--text2);margin-bottom:1rem" id="collective-sub">Temps unique pour toute la classe</div>
+            <div id="collective-inputs"></div>
           </div>
         </div>
         <p class="notice">Sauvegarde automatique. <strong>Courses</strong> : moins = meilleur. <strong>Sauts/Lancers</strong> : plus = meilleur.</p>
@@ -428,7 +428,7 @@ const DEFAULT_SPORT_EVENTS = [
   { key:'long',   label:'Longueur', icon:'📏', type:'mcm',     unit:'m:cm',    collective:false, lowerBetter:false, locked:true },
   { key:'lance',  label:'Lancer',   icon:'🏋️', type:'mcm',     unit:'m:cm',    collective:false, lowerBetter:false, locked:true },
   { key:'sprint', label:'Sprint',   icon:'⚡', type:'seccent', unit:'sec:cent',collective:false, lowerBetter:true,  locked:true },
-  { key:'relais', label:'Relais',   icon:'🏁', type:'minsec',  unit:'min:sec', collective:true,  lowerBetter:true,  locked:true },
+  { key:'relais', label:'Relais',   icon:'🏁', type:'minsec',  unit:'min:sec', collective:true,  lowerBetter:true, locked:true, dual:true },
 ];
 
 const fbApp = initializeApp(firebaseConfig);
@@ -744,7 +744,7 @@ function renderSportEventsList() {
 function renderThresholdsList() {
   const el = document.getElementById('thresholds-list');
   if (!el) return;
-  const events = allSportEvents().filter(e => !e.collective);
+  const events = allSportEvents().filter(e => !e.collective || e.dual);
   el.innerHTML = events.map(e => {
     const t = getThreshold(e.key);
     const hasMax = t.max !== null;
@@ -1011,8 +1011,15 @@ function renderEventPicker() {
   const isAdmin = role === 'admin';
   picker.innerHTML = allSportEvents().map(e => {
     let filled=0, total=1;
-    if (e.collective) { filled = (cls[e.key]!==null&&cls[e.key]!==undefined)?1:0; }
-    else { total=students.length; filled=students.filter(s=>s[e.key]!==null&&s[e.key]!==undefined).length; }
+    if (e.dual) {
+      const valG = cls[e.key+'_g'], valF = cls[e.key+'_f'];
+      filled = (valG!==null&&valG!==undefined?1:0) + (valF!==null&&valF!==undefined?1:0);
+      total = 2;
+    } else if (e.collective) {
+      filled = (cls[e.key]!==null&&cls[e.key]!==undefined)?1:0;
+    } else {
+      total=students.length; filled=students.filter(s=>s[e.key]!==null&&s[e.key]!==undefined).length;
+    }
     const isActive = selectedSportKey === e.key;
     const progress = total>0 ? `${filled}/${total} · ` : '';
     const delBtn = (!e.locked && isAdmin) ? `<button class="event-pill-del" onclick="deleteSportEvent(event,'${e.key}')" title="Supprimer">✕</button>` : '';
@@ -1157,23 +1164,71 @@ function refreshProgress(key) {
 // ── COLLECTIVE ENTRY ───────────────────────
 function renderCollectiveEntry(ev) {
   const cls = evData.classes[selectedClass]||{};
+  document.getElementById('collective-title').textContent = `${ev.icon} ${ev.label} — résultat collectif`;
+
+  if (ev.dual) {
+    // Relais : deux temps séparés garçons + filles
+    const valG = cls[ev.key+'_g'], valF = cls[ev.key+'_f'];
+    const hasDoneG = valG !== null && valG !== undefined;
+    const hasDoneF = valF !== null && valF !== undefined;
+    const dG = decodeValue(ev.type, valG);
+    const dF = decodeValue(ev.type, valF);
+    const [lA, lB] = inputLabels(ev.type);
+    const avgVal = (hasDoneG && hasDoneF) ? (valG + valF) / 2 : (hasDoneG ? valG : (hasDoneF ? valF : null));
+    const avgDisplay = avgVal !== null ? `Moyenne : <strong>${fmtValue(ev.type, avgVal)}</strong>` : '';
+
+    document.getElementById('collective-sub').textContent = 'Un temps pour les garçons, un temps pour les filles — moyenne utilisée pour le classement';
+    document.getElementById('collective-inputs').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:1.25rem">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">👦 Garçons</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input class="ei${hasDoneG?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hasDoneG&&dG.a!==''?dG.a:''}"
+              id="coll_g_a" onfocus="this.select()" onchange="saveDualAB('${ev.key}','g','a',this.value)">
+            <span class="ei-sep">:</span>
+            <input class="ei${hasDoneG?' filled':''}" type="text" inputmode="numeric" placeholder="${lB}" value="${hasDoneG&&dG.b!==''?dG.b:''}"
+              id="coll_g_b" onfocus="this.select()" onchange="saveDualAB('${ev.key}','g','b',this.value)">
+            <span class="ei-label">${ev.unit}</span>
+            <span style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDoneG?'✓':''}</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">👧 Filles</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input class="ei${hasDoneF?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hasDoneF&&dF.a!==''?dF.a:''}"
+              id="coll_f_a" onfocus="this.select()" onchange="saveDualAB('${ev.key}','f','a',this.value)">
+            <span class="ei-sep">:</span>
+            <input class="ei${hasDoneF?' filled':''}" type="text" inputmode="numeric" placeholder="${lB}" value="${hasDoneF&&dF.b!==''?dF.b:''}"
+              id="coll_f_b" onfocus="this.select()" onchange="saveDualAB('${ev.key}','f','b',this.value)">
+            <span class="ei-label">${ev.unit}</span>
+            <span style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDoneF?'✓':''}</span>
+          </div>
+        </div>
+        <div style="font-size:14px;color:var(--text2);padding-top:.5rem;border-top:1px solid var(--border2)">${avgDisplay}</div>
+      </div>`;
+    return;
+  }
+
+  // Épreuve collective simple
   const val = cls[ev.key], hasDone=val!==null&&val!==undefined;
   const d = decodeValue(ev.type, val);
-  document.getElementById('collective-title').textContent = `${ev.icon} ${ev.label} — résultat collectif`;
+  document.getElementById('collective-sub').textContent = 'Temps unique pour toute la classe';
   let html = '';
   if (ev.type==='number') {
-    html=`<input class="ei${hasDone?' filled':''}" type="text" inputmode="decimal" placeholder="—" value="${hasDone?d.a:''}"
+    html=`<div class="entry-inputs"><input class="ei${hasDone?' filled':''}" type="text" inputmode="decimal" placeholder="—" value="${hasDone?d.a:''}"
       onfocus="this.select()" onchange="saveCollective('${ev.key}','${ev.type}',this.value,'')">
-      <span class="ei-label">${ev.unit}</span>`;
+      <span class="ei-label">${ev.unit}</span></div>`;
   } else {
     const [lA,lB]=inputLabels(ev.type);
-    html=`<input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hasDone&&d.a!==''?d.a:''}"
+    html=`<div class="entry-inputs">
+      <input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric" placeholder="${lA}" value="${hasDone&&d.a!==''?d.a:''}"
         id="coll_a" onfocus="this.select()" onchange="saveCollAB('${ev.key}','${ev.type}','a',this.value)">
       <span class="ei-sep">:</span>
       <input class="ei${hasDone?' filled':''}" type="text" inputmode="numeric" placeholder="${lB}" value="${hasDone&&d.b!==''?d.b:''}"
         id="coll_b" onfocus="this.select()" onchange="saveCollAB('${ev.key}','${ev.type}','b',this.value)">
       <span class="ei-label">${ev.unit}</span>
-      <span id="coll-total" style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDone?'= '+fmtValue(ev.type,val):''}</span>`;
+      <span id="coll-total" style="font-size:13px;color:var(--green);font-weight:600;margin-left:4px">${hasDone?'= '+fmtValue(ev.type,val):''}</span>
+    </div>`;
   }
   document.getElementById('collective-inputs').innerHTML = html;
 }
@@ -1196,13 +1251,50 @@ window.saveCollAB = (key, type, field, val) => {
   saveEvData(); renderEventPicker();
 };
 
+// Relais dual : garçons (g) et filles (f)
+window.saveDualAB = (key, gender, field, val) => {
+  if (!selectedClass) return;
+  const cls = evData.classes[selectedClass];
+  const tA = `_dual_${key}_${gender}_a`, tB = `_dual_${key}_${gender}_b`;
+  if (field==='a') cls[tA] = val;
+  if (field==='b') cls[tB] = val;
+  const ev = getSportEvent(key);
+  const encoded = encodeValue(ev.type, cls[tA]!==undefined?cls[tA]:'', cls[tB]!==undefined?cls[tB]:'');
+  cls[key+'_'+gender] = encoded;
+  // Recalculer la moyenne garçons/filles
+  const valG = cls[key+'_g'], valF = cls[key+'_f'];
+  const hasDoneG = valG !== null && valG !== undefined;
+  const hasDoneF = valF !== null && valF !== undefined;
+  if (hasDoneG && hasDoneF) cls[key] = (valG + valF) / 2;
+  else if (hasDoneG) cls[key] = valG;
+  else if (hasDoneF) cls[key] = valF;
+  else cls[key] = null;
+  // Mettre à jour l'affichage de la moyenne
+  const avgEl = document.querySelector('#collective-inputs [style*="border-top"]');
+  if (avgEl && cls[key] !== null) {
+    avgEl.innerHTML = `Moyenne : <strong>${fmtValue(ev.type, cls[key])}</strong>`;
+  }
+  // Mettre à jour le ✓
+  ['g','f'].forEach(g => {
+    const v = cls[key+'_'+g];
+    const hasDone = v !== null && v !== undefined;
+    [`coll_${g}_a`, `coll_${g}_b`].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('filled', hasDone);
+    });
+  });
+  saveEvData();
+  renderEventPicker();
+};
+
 // ── SEUILS ─────────────────────────────────
 // Seuils par défaut (en valeur stockée = secondes ou cm)
 const DEFAULT_THRESHOLDS = {
-  r800:   { max: 420,  min: null }, // 7min = 420s — pas au-dessus
-  sprint: { max: 15,   min: null }, // 15s — pas au-dessus
-  lance:  { max: null, min: 300  }, // 3m = 300cm — pas en-dessous
-  long:   { max: null, min: 150  }, // 1m50 = 150cm — pas en-dessous
+  r800:   { max: 420,  min: null }, // 7min = 420s
+  sprint: { max: 15,   min: null }, // 15s
+  lance:  { max: null, min: 300  }, // 3m = 300cm
+  long:   { max: null, min: 150  }, // 1m50 = 150cm
+  relais: { max: null, min: null }, // à définir par l'admin
 };
 
 function getThresholds() {
@@ -1257,8 +1349,27 @@ function renderRanking() {
     const students=evData.classes[c]?.students||{};
     const avgs={};
     events.forEach(e=>{
-      if (e.collective) { const rv=evData.classes[c]?.[e.key]; avgs[e.key]=(rv!==null&&rv!==undefined&&!isNaN(parseFloat(rv)))?parseFloat(rv):null; }
-      else avgs[e.key]=avg(students,e.key);
+      if (e.dual) {
+        // Relais : moyenne garçons + filles avec seuil
+        const valG = evData.classes[c]?.[e.key+'_g'];
+        const valF = evData.classes[c]?.[e.key+'_f'];
+        const hasDoneG = valG!==null&&valG!==undefined&&!isNaN(parseFloat(valG));
+        const hasDoneF = valF!==null&&valF!==undefined&&!isNaN(parseFloat(valF));
+        if (hasDoneG && hasDoneF) {
+          avgs[e.key] = (applyThreshold(e.key, parseFloat(valG)) + applyThreshold(e.key, parseFloat(valF))) / 2;
+        } else if (hasDoneG) {
+          avgs[e.key] = applyThreshold(e.key, parseFloat(valG));
+        } else if (hasDoneF) {
+          avgs[e.key] = applyThreshold(e.key, parseFloat(valF));
+        } else {
+          avgs[e.key] = null;
+        }
+      } else if (e.collective) {
+        const rv=evData.classes[c]?.[e.key];
+        avgs[e.key]=(rv!==null&&rv!==undefined&&!isNaN(parseFloat(rv)))?applyThreshold(e.key,parseFloat(rv)):null;
+      } else {
+        avgs[e.key]=avg(students,e.key);
+      }
     });
     return {cls:c,avgs,pts:{},total:0};
   });
